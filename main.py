@@ -40,9 +40,9 @@ def main():
     print("\n[Tahap 1] Memproses Teks...")
     X_tfidf, vectorizer, cleaned_texts = prepare_features(df, text_col)
     
-    # 6. Clustering (K-Means K=3)
+    # 6. Clustering (K-Means K=2)
     print("\n[Tahap 2] Clustering...")
-    k = 3
+    k = 2
     
     # Boost fitur sentimen agar K-Means mengelompokkan berdasarkan EMOSI, bukan TOPIK
     print("Melakukan Sentiment Feature Boosting...")

@@ -65,9 +65,9 @@ def boost_sentiment_features(X_tfidf, vectorizer):
     return X_boosted
 
 
-def run_kmeans(X_boosted, k=3):
+def run_kmeans(X_boosted, k=2):
     """
-    Run K-Means clustering dengan K=3 pada matrix yang sudah di-boost.
+    Run K-Means clustering dengan K=2 pada matrix yang sudah di-boost.
     """
     print(f"Menjalankan K-Means Clustering dengan K={k}...")
     kmeans = KMeans(n_clusters=k, random_state=42, n_init=10)
@@ -88,8 +88,8 @@ def reassign_by_sentiment(labels, df, text_col, labels_map):
     
     Review dengan sentimen NETRAL (skor seimbang) tidak dipindah.
     """
-    # Buat reverse map: 'Positif' → cluster_id, 'Negatif' → cluster_id, 'Netral' → cluster_id
-    reverse_map = {v: k for k, v in labels_map.items()}
+    # Buat reverse map hanya untuk label Positif & Negatif
+    reverse_map = {v: k for k, v in labels_map.items() if v in ('Positif', 'Negatif')}
     
     new_labels = labels.copy()
     reassigned = 0
@@ -112,8 +112,8 @@ def reassign_by_sentiment(labels, df, text_col, labels_map):
             # Sentimen tidak jelas → jangan dipindah
             continue
         
-        # Pindahkan jika jelas berlawanan dengan label cluster saat ini
-        if current_sentiment != individual_sentiment and current_sentiment != 'Netral':
+        # Pindahkan jika label cluster tidak cocok dengan sentimen individu
+        if current_sentiment != individual_sentiment:
             target_cluster = reverse_map.get(individual_sentiment)
             if target_cluster is not None:
                 new_labels[i] = target_cluster
@@ -144,20 +144,18 @@ def get_top_keywords(X_tfidf, labels, vectorizer, k=3, top_n=10):
 
 def auto_label_clusters(cluster_keywords):
     """
-    Melabeli cluster menjadi Positif, Negatif, atau Netral.
+    Melabeli cluster menjadi Positif atau Negatif (binary).
     
     Logika scoring:
     - Setiap kata sentimen positif  → skor += 1
     - Setiap kata sentimen negatif  → skor -= 1
-    - n-gram yang mengandung kata sentimen → skor += 0.5 / -0.5
+    - n‑gram yang mengandung kata sentimen → skor += 0.5 / -0.5
     
     Logika labeling:
     - Urutkan cluster dari skor tertinggi ke terendah
-    - Cluster skor tertinggi  → Positif
-    - Cluster skor terendah   → Negatif
-    - Cluster tengah          → Netral
-    - Jika semua skor ≤ 0 (tidak ada cluster yang jelas positif),
-      cluster tengah tetap Netral walaupun skornya negatif.
+    - Cluster tertinggi  → Positif
+    - Cluster terendah   → Negatif
+    - Jika hanya satu cluster (fallback) → beri label Positif
     """
     scores = {}
     for cluster_id, words in cluster_keywords.items():
@@ -165,30 +163,32 @@ def auto_label_clusters(cluster_keywords):
         neg_score = 0.0
         for w in words:
             word_base = w.split('_')[0]  # handle negasi: tidak_bagus → tidak
-            # Cek exact match
             if w in POSITIVE_WORDS or word_base in POSITIVE_WORDS:
                 pos_score += 1
             elif w in NEGATIVE_WORDS or word_base in NEGATIVE_WORDS:
                 neg_score += 1
-            # Cek partial match (untuk n-gram seperti "average bad", "great product")
             elif any(p in w for p in POSITIVE_WORDS):
                 pos_score += 0.5
             elif any(n in w for n in NEGATIVE_WORDS):
                 neg_score += 0.5
-
         diff = pos_score - neg_score
         scores[cluster_id] = {'pos': pos_score, 'neg': neg_score, 'diff': diff}
         print(f"  Cluster {cluster_id}: pos={pos_score:.1f}, neg={neg_score:.1f}, diff={diff:+.1f} | keywords: {words[:5]}")
 
-    # Urutkan: tertinggi → Positif, terendah → Negatif, tengah → Netral
+    # Urutkan: tertinggi → Positif, terendah → Negatif
     sorted_clusters = sorted(scores.items(), key=lambda x: x[1]['diff'], reverse=True)
 
     labels_map = {}
-    if len(sorted_clusters) == 3:
+    if len(sorted_clusters) >= 2:
         labels_map[sorted_clusters[0][0]] = 'Positif'
-        labels_map[sorted_clusters[1][0]] = 'Netral'
-        labels_map[sorted_clusters[2][0]] = 'Negatif'
+        labels_map[sorted_clusters[-1][0]] = 'Negatif'
+        # Jika ada cluster ketiga (mis‑config), beri label Netral sementara
+        if len(sorted_clusters) == 3:
+            labels_map[sorted_clusters[1][0]] = 'Netral'
+    elif len(sorted_clusters) == 1:
+        labels_map[sorted_clusters[0][0]] = 'Positif'
     else:
+        # fallback: assign generic names
         for cluster_id in cluster_keywords.keys():
             labels_map[cluster_id] = f"Cluster {cluster_id}"
 
@@ -199,7 +199,7 @@ def score_single_review(text):
     """
     Menghitung skor sentimen (+/-) untuk satu teks ulasan secara individual.
     Digunakan untuk memvalidasi apakah ulasan cocok dengan label cluster-nya.
-    Returns: 'Positif', 'Negatif', atau 'Netral'
+    Returns: 'Positif', 'Negatif'
     """
     words = str(text).lower().split()
     pos_score = 0
@@ -209,18 +209,9 @@ def score_single_review(text):
             pos_score += 1
         elif word in NEGATIVE_WORDS:
             neg_score += 1
-    
-    if pos_score > neg_score:
-        return 'Positif'
-    elif neg_score > pos_score:
-        return 'Negatif'
-    else:
-        return 'Netral'
-
-
-def get_representative_reviews(df, text_col, X_tfidf, labels, kmeans, labels_map, k=3, top_n=3):
+def get_representative_reviews(df, text_col, X_tfidf, labels, kmeans, labels_map, k=2, top_n=3):
     """
-    Mendapatkan review paling dekat dengan centroid (representative review) untuk divalidasi.
+    Mendapatkan review paling dekat dengan centroid untuk divalidasi.
     Setiap kandidat divalidasi skor sentimennya agar cocok dengan label cluster.
     Jika tidak ada yang cocok, fallback ke kandidat terdekat tanpa filter.
     """
@@ -234,42 +225,45 @@ def get_representative_reviews(df, text_col, X_tfidf, labels, kmeans, labels_map
         centroid = np.asarray(cluster_points.mean(axis=0))
         distances = euclidean_distances(cluster_points, centroid).flatten()
 
-        # Ambil kandidat lebih banyak dulu, lalu filter
         n_candidates = min(len(cluster_indices), top_n * 3)
         candidate_idx = distances.argsort()[:n_candidates]
         candidate_original_idx = cluster_indices[candidate_idx]
 
         expected_sentiment = labels_map.get(i, '')
-        
+
         # Filter: hanya tampilkan review yang skor sentimennya sesuai label cluster
         validated = []
         fallback = []
         for orig_idx in candidate_original_idx:
             review_text = df.iloc[orig_idx][text_col]
             review_sentiment = score_single_review(review_text)
-            
-            # Untuk Netral: terima review yang skor positif & negatifnya seimbang
-            # Untuk Positif/Negatif: harus exact match
-            is_match = (
-                review_sentiment == expected_sentiment or
-                (expected_sentiment == 'Netral' and review_sentiment in ('Netral', 'Positif', 'Negatif'))
-            )
-            
+            is_match = (review_sentiment == expected_sentiment)
             if is_match:
                 validated.append(review_text)
             else:
                 fallback.append(review_text)
-            
             if len(validated) >= top_n:
                 break
-
         # Jika tidak ada yang cocok (dataset sangat kecil), gunakan fallback
         if not validated:
             validated = fallback[:top_n]
-
         rep_reviews[i] = validated[:top_n]
 
     return rep_reviews
+
+
+def score_single_review(text):
+    """
+    Menghitung skor sentimen (+/-) untuk satu teks ulasan secara individual.
+    Returns: 'Positif' atau 'Negatif'.
+    """
+    words = str(text).lower().split()
+    pos_score = sum(1 for w in words if w in POSITIVE_WORDS)
+    neg_score = sum(1 for w in words if w in NEGATIVE_WORDS)
+    if pos_score > neg_score:
+        return 'Positif'
+    else:
+        return 'Negatif'
 
 
 def reduce_dimensions_pca(X_tfidf):
