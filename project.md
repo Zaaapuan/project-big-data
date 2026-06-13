@@ -40,8 +40,8 @@ Sastrawi
 
 ## 3. Metode dan Teknik NLP yang Digunakan
 
-### K-Means Clustering (K=3)
-K-Means digunakan untuk mengelompokkan data teks ke dalam 3 kelompok besar berdasarkan kedekatan/kemiripan fitur kata.
+### K-Means Clustering (K=2)
+K-Means digunakan untuk mengelompokkan data teks ke dalam 2 kelompok besar berdasarkan kedekatan/kemiripan fitur kata.
 - **K = 2** (Ditetapkan secara hardcode untuk sentimen Positif dan Negatif).
 
 ### Stopwords (Inggris & Indonesia)
