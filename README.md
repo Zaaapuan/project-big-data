@@ -1,419 +1,333 @@
-# Customer Review Analysis - Sentiment Clustering
+# Dashboard Clustering Profil Karyawan
 
-Proyek ini adalah aplikasi command-line berbasis Python untuk menganalisis teks
-ulasan pelanggan dari file CSV. Program mengelompokkan ulasan menjadi dua
-sentimen, yaitu **Positif** dan **Negatif**, lalu menghasilkan laporan teks dan
-visualisasi yang dapat dipakai untuk melihat pola umum dalam kumpulan ulasan.
+Aplikasi desktop lokal untuk melakukan segmentasi profil karyawan menggunakan
+K-Means dan SVM. Antarmuka disusun sebagai dashboard akademik untuk tugas big
+data: informasi dataset, konfigurasi algoritma, proses inferensi, dan hasil
+ditampilkan dalam satu halaman. UI dibuat dengan HTML, CSS, dan JavaScript,
+disajikan oleh Flask, lalu dibuka sebagai window native melalui pywebview.
 
-Pendekatan yang digunakan bersifat **hybrid**:
+Saat menjalankan:
 
-1. **Unsupervised learning** melalui TF-IDF dan K-Means untuk membentuk cluster.
-2. **Lexicon-based sentiment rules** untuk memperkuat kata sentimen, memberi
-   nama pada cluster, dan memperbaiki ulasan yang masuk ke cluster yang tidak
-   sesuai.
+```bash
+python main.py
+```
 
-Dengan pendekatan tersebut, program tidak hanya mengelompokkan ulasan
-berdasarkan kemiripan topik, tetapi mencoba mendorong pemisahan berdasarkan
-emosi positif dan negatif.
+aplikasi langsung membuka window dashboard. Tidak ada browser eksternal,
+layanan cloud, atau input interaktif di terminal.
 
 ## Daftar Isi
 
-- [Tujuan Proyek](#tujuan-proyek)
-- [Fitur Utama](#fitur-utama)
-- [Arsitektur dan Struktur Folder](#arsitektur-dan-struktur-folder)
-- [Alur Pemrosesan Data](#alur-pemrosesan-data)
-- [Detail Metode](#detail-metode)
-- [Format Data Masukan](#format-data-masukan)
+- [Tujuan](#tujuan)
+- [Kategori Profil](#kategori-profil)
+- [Arsitektur](#arsitektur)
+- [Dataset](#dataset)
+- [Machine Learning Pipeline](#machine-learning-pipeline)
+- [Panduan Membaca Kode](#panduan-membaca-kode)
 - [Instalasi](#instalasi)
-- [Cara Menjalankan](#cara-menjalankan)
-- [Output Program](#output-program)
-- [Konfigurasi Penting](#konfigurasi-penting)
-- [Penjelasan Setiap Modul](#penjelasan-setiap-modul)
+- [Menjalankan Aplikasi](#menjalankan-aplikasi)
+- [Menggunakan Dashboard](#menggunakan-dashboard)
+- [REST API Internal](#rest-api-internal)
+- [Validasi Input](#validasi-input)
+- [Cache Model](#cache-model)
+- [Pengujian](#pengujian)
+- [Kompatibilitas](#kompatibilitas)
 - [Keterbatasan](#keterbatasan)
 - [Troubleshooting](#troubleshooting)
-- [Pengembangan Lanjutan](#pengembangan-lanjutan)
 
-## Tujuan Proyek
+## Tujuan
 
-Program ini dibuat untuk membantu eksplorasi kumpulan ulasan pelanggan tanpa
-memerlukan label sentimen yang sudah disiapkan sebelumnya. Masalah yang ingin
-diselesaikan adalah:
+Aplikasi menerima empat atribut:
 
-- membaca kumpulan review dari CSV;
-- membersihkan teks berbahasa Indonesia dan Inggris;
-- mengubah teks menjadi fitur numerik;
-- memisahkan ulasan ke dalam cluster positif dan negatif;
-- menunjukkan kata-kata dominan pada setiap cluster;
-- memilih beberapa ulasan yang mewakili setiap cluster;
-- menyajikan distribusi sentimen dan sebaran cluster dalam bentuk gambar.
+- umur;
+- total pengalaman kerja;
+- tingkat pendidikan;
+- departemen.
 
-Program cocok digunakan sebagai proyek pembelajaran NLP, eksplorasi awal data
-review, atau prototipe analisis sentimen. Hasilnya bukan pengganti model
-sentimen terlatih untuk kebutuhan produksi yang memerlukan akurasi tinggi.
+Data tersebut diproses oleh model lokal untuk mencari kategori profil yang
+paling serupa dengan segmentasi pada dataset IBM HR.
 
-## Fitur Utama
+Hasil yang ditampilkan meliputi:
 
-- Input berupa file `.csv` dari folder `big_data/`.
-- Pemilihan kolom teks secara interaktif.
-- Penghapusan baris yang mempunyai nilai kosong.
-- Sampling otomatis maksimal 10.000 baris untuk mengurangi risiko kehabisan
-  memori.
-- Pembersihan teks dan penanganan negasi sederhana.
-- Stopword bahasa Indonesia, bahasa Inggris, dan kata umum domain e-commerce.
-- Ekstraksi fitur TF-IDF unigram dan bigram.
-- Penguatan bobot kata sentimen sebesar 10 kali.
-- K-Means dengan dua cluster.
-- Pemberian label cluster Positif dan Negatif secara otomatis.
-- Pemindahan ulang ulasan yang sentimennya jelas berlawanan dengan label
-  cluster.
-- Ekstraksi 10 keyword dan maksimal 3 representative review per cluster.
-- Reduksi dimensi menggunakan PCA untuk scatter plot.
-- Pembuatan pie chart distribusi sentimen dan word cloud.
+- jejak validasi input;
+- rumus StandardScaler untuk setiap fitur numerik;
+- hasil one-hot encoding departemen;
+- vector akhir yang masuk ke model;
+- jarak input terhadap setiap centroid K-Means;
+- probabilitas setiap kategori dari SVM;
+- kategori hasil klasifikasi SVM;
+- kategori cluster K-Means;
+- confidence SVM;
+- status apakah kedua model memberikan kategori yang sama;
+- ringkasan data masukan;
+- penjelasan kategori dan disclaimer.
 
-## Arsitektur dan Struktur Folder
+Kategori bukan penilaian performa kerja objektif. Aplikasi tidak boleh
+digunakan sebagai satu-satunya dasar rekrutmen, promosi, kompensasi, atau
+keputusan HR lainnya.
+
+## Kategori Profil
+
+### Emerging Talent
+
+Profil talenta awal karier dengan usia relatif muda, pendidikan menengah, dan
+pengalaman kerja yang masih berkembang.
+
+### Academic Achiever
+
+Profil karyawan relatif muda dengan tingkat pendidikan lebih tinggi
+dibandingkan kelompok awal karier lainnya.
+
+### Seasoned Veteran
+
+Profil karyawan senior dengan usia dan total pengalaman kerja paling tinggi
+dalam segmentasi dataset.
+
+Label tersebut ditetapkan dari statistik centroid K-Means, bukan dari kolom
+`PerformanceRating`.
+
+## Arsitektur
 
 ```text
 project-big-data/
 |-- main.py
 |-- requirements.txt
-|-- README.md
-|-- project.md
-|-- big_data/
-|   `-- reviews.csv
-|-- modules/
-|   |-- loader.py
-|   |-- preprocessor.py
-|   |-- clustering.py
-|   `-- visualizer.py
-`-- output/                    # Dibuat otomatis saat program dijalankan
+|-- requirements-dev.txt
+|-- pytest.ini
+|-- data/
+|   `-- employee_attrition.csv
+|-- employee_app/
+|   |-- config.py
+|   |-- data_loader.py
+|   |-- model_trainer.py
+|   |-- predictor.py
+|   |-- api.py
+|   `-- desktop.py
+|-- templates/
+|   `-- index.html
+|-- static/
+|   |-- css/styles.css
+|   `-- js/app.js
+|-- artifacts/
+|   `-- employee_profile_model.joblib  # Dibuat otomatis
+`-- tests/
+    |-- conftest.py
+    |-- test_data_loader.py
+    |-- test_model_trainer.py
+    |-- test_predictor.py
+    `-- test_api.py
 ```
 
-Keterangan:
+### Komponen
 
-| Lokasi | Tanggung jawab |
+| Komponen | Tanggung jawab |
 |---|---|
-| `main.py` | Entry point dan pengatur urutan seluruh pipeline. |
-| `modules/loader.py` | Validasi nama file, membaca CSV, dan membuang baris kosong. |
-| `modules/preprocessor.py` | Pemilihan kolom teks, cleaning, stopword removal, dan TF-IDF. |
-| `modules/clustering.py` | Sentiment boosting, K-Means, labeling, reassignment, keyword, representative review, dan PCA. |
-| `modules/visualizer.py` | Membuat folder output dan seluruh visualisasi. |
-| `big_data/` | Tempat file CSV yang akan dianalisis. |
-| `output/` | Tempat laporan dan gambar hasil analisis. |
-| `project.md` | Dokumen rencana awal proyek; beberapa bagiannya tidak lagi sama dengan implementasi terbaru. |
+| `main.py` | Entry point aplikasi desktop. |
+| `config.py` | Path, fitur, kategori, dan konfigurasi pipeline. |
+| `data_loader.py` | Membaca, memvalidasi, dan menghitung hash dataset. |
+| `model_trainer.py` | Preprocessing, K-Means, labeling, SVM, metrik, dan cache. |
+| `predictor.py` | Validasi request dan inferensi model. |
+| `api.py` | Dashboard dan REST API Flask internal. |
+| `desktop.py` | Membuat window native pywebview. |
+| `templates/` dan `static/` | UI offline dashboard. |
 
-## Alur Pemrosesan Data
+Flask diberikan langsung sebagai aplikasi WSGI kepada pywebview. pywebview
+menjalankan server lokal internal dan menampilkan hasilnya menggunakan web
+renderer bawaan sistem operasi.
 
-Secara ringkas, alur data program adalah:
+Dashboard menggunakan font Rubik yang disimpan lokal di
+`static/fonts/Rubik-Variable.ttf`. Dengan demikian, tampilan tetap konsisten
+dan tidak membutuhkan Google Fonts atau koneksi internet saat aplikasi dibuka.
 
-```text
-CSV
- |
- v
-Load dan hapus baris kosong
- |
- v
-Sampling maksimal 10.000 baris
- |
- v
-Pilih kolom review
- |
- v
-Cleaning + penanganan negasi
- |
- v
-TF-IDF unigram/bigram
- |
- +--------------------------+
- |                          |
- v                          v
-Sentiment feature boost     PCA 2D untuk visualisasi
- |
- v
-K-Means (K=2)
- |
- v
-Top keywords awal
- |
- v
-Label cluster Positif/Negatif
- |
- v
-Reassignment berbasis leksikon
- |
- v
-Keyword dan representative review akhir
- |
- v
-Laporan teks + scatter plot + pie chart + word cloud
-```
+## Dataset
 
-Tahapan yang dijalankan oleh `main.py`:
-
-1. Membuat folder `output/` apabila belum ada.
-2. Meminta nama file CSV yang berada di dalam `big_data/`.
-3. Membaca data dan menghapus seluruh baris yang mengandung minimal satu nilai
-   kosong.
-4. Mengambil sampel acak 10.000 baris jika dataset lebih besar dari batas
-   tersebut. Sampling memakai `random_state=42`, sehingga hasilnya konsisten.
-5. Menampilkan semua kolom bertipe teks dan meminta pengguna memilih kolom
-   review.
-6. Membersihkan teks dan membangun matriks TF-IDF.
-7. Memperbesar bobot fitur yang dikenali sebagai kata sentimen.
-8. Menjalankan K-Means untuk membentuk dua cluster.
-9. Menghitung koordinat PCA dari matriks TF-IDF asli.
-10. Mengambil keyword awal dan menentukan cluster mana yang Positif atau
-    Negatif.
-11. Memeriksa setiap review dengan leksikon, kemudian memindahkannya jika
-    sentimen individual jelas berlawanan dengan label cluster.
-12. Menghitung ulang keyword dan mengambil representative review.
-13. Menulis laporan dan membuat seluruh visualisasi.
-
-## Detail Metode
-
-### 1. Membaca dan Membersihkan Baris Data
-
-`load_data()` hanya menerima ekstensi `.csv`. File selalu dicari relatif
-terhadap folder `big_data/`.
-
-CSV dibaca oleh Pandas menggunakan:
-
-```python
-pd.read_csv(filepath, thousands=',', na_values=['-'])
-```
-
-Konsekuensinya:
-
-- tanda koma dapat diperlakukan sebagai pemisah ribuan pada kolom numerik;
-- nilai `-` diperlakukan sebagai nilai kosong;
-- apabila ada nilai kosong di kolom mana pun, satu baris penuh akan dihapus
-  dengan `dropna()`.
-
-### 2. Pemilihan Kolom Review
-
-Program mendeteksi kolom Pandas dengan tipe `object` atau `string`. Semua kolom
-teks akan ditampilkan sebagai daftar bernomor. Pengguna kemudian memilih kolom
-yang berisi isi review.
-
-Kolom numerik seperti rating tidak digunakan langsung dalam clustering.
-Dengan kata lain, keputusan sentimen berasal dari teks, bukan dari nilai
-rating.
-
-### 3. Text Cleaning
-
-Fungsi `clean_text()` melakukan langkah berikut:
-
-1. Mengubah semua huruf menjadi lowercase.
-2. Menggabungkan kata negasi Indonesia dengan satu kata sesudahnya.
-3. Menghapus angka.
-4. Menghapus tanda baca dan karakter khusus.
-5. Merapikan spasi.
-
-Contoh:
+Dataset disimpan lokal di:
 
 ```text
-Input : "Barang ini TIDAK bagus, nilainya 2/10!"
-Output: "barang ini tidak_bagus nilainya"
+data/employee_attrition.csv
 ```
 
-Kata negasi yang ditangani adalah:
-
-- `tidak`
-- `bukan`
-- `kurang`
-- `jangan`
-
-Underscore dipertahankan supaya bentuk seperti `tidak_bagus` dianggap sebagai
-satu token oleh vectorizer.
-
-### 4. Stopword Removal
-
-Daftar stopword merupakan gabungan dari:
-
-- stopword bahasa Inggris dari NLTK;
-- stopword bahasa Indonesia dari Sastrawi;
-- `CUSTOM_DOMAIN_STOPWORDS` yang didefinisikan di
-  `modules/preprocessor.py`.
-
-Stopword domain berisi kata umum yang dianggap lebih menunjukkan topik
-daripada emosi, misalnya `barang`, `produk`, `harga`, `shipping`, `delivery`,
-`customer`, dan `quality`.
-
-Tujuannya adalah mencegah cluster hanya terbagi berdasarkan jenis barang,
-pengiriman, atau topik umum lainnya.
-
-### 5. TF-IDF
-
-Program menggunakan `TfidfVectorizer` dengan konfigurasi:
-
-```python
-TfidfVectorizer(
-    max_features=5000,
-    stop_words=combined_stopwords,
-    ngram_range=(1, 2)
-)
-```
-
-Artinya:
-
-- maksimal 5.000 fitur digunakan;
-- stopword dibuang;
-- fitur dapat berupa satu kata atau dua kata berurutan;
-- kata yang khas pada suatu review mendapat bobot lebih besar daripada kata
-  yang sering muncul di semua review.
-
-Matriks TF-IDF disimpan sebagai sparse matrix agar tahap ekstraksi fitur lebih
-hemat memori.
-
-### 6. Sentiment Feature Boosting
-
-K-Means biasa cenderung memisahkan teks berdasarkan topik. Untuk menggeser
-fokusnya ke sentimen, `boost_sentiment_features()` mencari fitur yang cocok
-dengan leksikon `POSITIVE_WORDS` atau `NEGATIVE_WORDS`, lalu mengalikan kolom
-fitur tersebut dengan:
-
-```python
-SENTIMENT_BOOST_FACTOR = 10.0
-```
-
-Contoh kata positif:
+Sumber:
 
 ```text
-bagus, puas, mantap, good, excellent, love, recommend
+https://raw.githubusercontent.com/pplonski/datasets-for-start/master/
+employee_attrition/HR-Employee-Attrition-All.csv
 ```
 
-Contoh kata negatif:
+Karakteristik dataset:
 
-```text
-buruk, kecewa, rusak, bad, terrible, broken, useless
-```
+- 1.470 baris;
+- 35 kolom asli;
+- umur 18-60 tahun;
+- total pengalaman 0-40 tahun;
+- pendidikan dalam kode 1-5;
+- tiga departemen.
 
-Matriks hasil boosting hanya dipakai saat K-Means. Keyword dan PCA tetap
-menggunakan TF-IDF asli agar hasil interpretasi tidak sepenuhnya didominasi
-bobot buatan tersebut.
+Pipeline hanya menggunakan:
 
-### 7. K-Means
+| Input aplikasi | Kolom dataset |
+|---|---|
+| `age` | `Age` |
+| `years_experience` | `TotalWorkingYears` |
+| `education_level` | `Education` |
+| `department` | `Department` |
 
-Clustering memakai konfigurasi:
+### Kode Pendidikan
+
+| Kode | Label |
+|---:|---|
+| 1 | Below College |
+| 2 | College |
+| 3 | Bachelor |
+| 4 | Master |
+| 5 | Doctor |
+
+### Departemen
+
+- Human Resources
+- Research & Development
+- Sales
+
+Dataset disertakan di repo agar aplikasi tetap dapat melakukan training dan
+inferensi tanpa koneksi internet.
+
+## Machine Learning Pipeline
+
+### 1. Validasi Dataset
+
+Loader memastikan:
+
+- seluruh fitur model tersedia;
+- tidak ada nilai kosong;
+- kolom numerik dapat dikonversi;
+- rentang numerik sesuai dataset;
+- departemen hanya berisi nilai yang didukung.
+
+### 2. Preprocessing
+
+`ColumnTransformer` menerapkan:
+
+- `StandardScaler` pada `Age`, `TotalWorkingYears`, dan `Education`;
+- `OneHotEncoder(handle_unknown="ignore")` pada `Department`.
+
+Output dibuat dense karena dataset hanya memiliki sedikit fitur.
+
+### 3. K-Means
+
+Konfigurasi:
 
 ```python
 KMeans(
-    n_clusters=2,
+    n_clusters=3,
+    n_init=20,
     random_state=42,
-    n_init=10
 )
 ```
 
-K-Means mencari dua centroid dan menetapkan setiap review ke centroid terdekat
-pada ruang fitur yang sudah di-boost. Nilai `random_state=42` membuat
-inisialisasi dapat direproduksi, sedangkan `n_init=10` mencoba sepuluh
-inisialisasi dan memilih hasil terbaik berdasarkan inertia.
+K-Means membentuk tiga segmentasi tanpa label target.
 
-Nomor cluster `0` dan `1` belum mempunyai arti sentimen pada tahap ini.
+### 4. Pemberian Nama Cluster
 
-### 8. Top Keywords dan Auto-Labeling
+Nama cluster tidak bergantung pada nomor cluster karena ID K-Means tidak
+memiliki makna tetap.
 
-Untuk setiap cluster, program menghitung rata-rata bobot TF-IDF setiap fitur,
-kemudian mengambil 10 fitur dengan rata-rata tertinggi.
+Aturan labeling:
 
-Keyword tersebut diberi skor:
+1. Cluster dengan rata-rata pengalaman tertinggi, lalu umur tertinggi,
+   menjadi `Seasoned Veteran`.
+2. Dari dua cluster tersisa, cluster dengan pendidikan rata-rata tertinggi
+   menjadi `Academic Achiever`.
+3. Cluster terakhir menjadi `Emerging Talent`.
 
-- keyword positif: `+1`;
-- keyword negatif: `-1`;
-- n-gram yang mengandung kata positif: `+0.5`;
-- n-gram yang mengandung kata negatif: `-0.5`.
+Aturan ini membuat label konsisten meskipun nomor cluster berubah.
 
-Cluster dengan selisih skor positif-negatif tertinggi diberi label
-`Positif`. Cluster dengan skor terendah diberi label `Negatif`. Karena
-implementasi utama menetapkan `K=2`, program selalu memetakan satu cluster ke
-masing-masing label, bahkan ketika kedua cluster memiliki sinyal sentimen yang
-lemah.
+### 5. SVM
 
-### 9. Post-Clustering Reassignment
-
-Setelah cluster diberi nama, setiap review diperiksa kembali. Kata pada review
-mentah dibandingkan dengan leksikon positif dan negatif.
-
-- Jika jumlah kata positif lebih banyak minimal satu, review dianggap Positif.
-- Jika jumlah kata negatif lebih banyak minimal satu, review dianggap Negatif.
-- Jika skor seimbang, label K-Means dipertahankan.
-- Jika sentimen individual berlawanan dengan label cluster, review dipindahkan
-  ke cluster lain.
-
-Tahap ini membuat hasil akhir bukan K-Means murni. Label akhir merupakan
-kombinasi hasil clustering dan aturan sentimen.
-
-### 10. Representative Reviews
-
-Program menghitung centroid baru dari TF-IDF asli untuk anggota setiap cluster,
-lalu mengurutkan review berdasarkan jarak Euclidean ke centroid tersebut.
-
-Maksimal sembilan kandidat terdekat diperiksa untuk memperoleh tiga review
-yang:
-
-- dekat dengan pusat cluster; dan
-- skor leksikonnya sesuai dengan label cluster.
-
-Jika tidak ada kandidat yang sesuai, program memakai review terdekat tanpa
-filter sebagai fallback.
-
-### 11. PCA
-
-Untuk menampilkan data berdimensi tinggi pada bidang 2D, program menjalankan:
+SVM RBF dilatih untuk mempelajari label cluster K-Means:
 
 ```python
-PCA(n_components=2, random_state=42)
+SVC(
+    kernel="rbf",
+    class_weight="balanced",
+    random_state=42,
+)
 ```
 
-PCA dijalankan pada TF-IDF asli yang diubah menjadi dense array. Koordinat
-hasilnya disimpan sementara pada kolom `PCA1` dan `PCA2`, kemudian dipakai
-untuk scatter plot.
+`CalibratedClassifierCV` dengan kalibrasi sigmoid digunakan agar model dapat
+memberikan probabilitas kategori.
 
-PCA hanya dipakai untuk visualisasi. Koordinat PCA tidak digunakan dalam
-proses K-Means.
+Confidence yang ditampilkan berarti keyakinan SVM terhadap segmentasi profil.
+Confidence bukan probabilitas bahwa karyawan akan memiliki performa kerja
+tertentu.
 
-## Format Data Masukan
+### 6. Metrik
 
-Letakkan file CSV di dalam folder `big_data/`. Minimal harus ada satu kolom
-teks. Nama kolom bebas karena program akan meminta pengguna memilihnya.
+Aplikasi menyimpan:
 
-Contoh:
+- accuracy SVM terhadap label K-Means;
+- balanced accuracy SVM terhadap label K-Means;
+- silhouette score K-Means.
 
-```csv
-review_text,rating,product
-"This laptop is amazing and has a great battery life.",5,Laptop
-"Terrible product. The screen was broken upon arrival.",1,Laptop
-"Sangat puas dengan barang ini! Bagus sekali.",5,Smartphone
-"Jelek sekali, barangnya rusak saat sampai.",1,Smartphone
+Balanced accuracy dihitung menggunakan stratified 5-fold cross-validation.
+Pada dataset yang disertakan, konsistensi SVM terhadap K-Means sekitar 98%.
+Angka ini tidak mengukur kebenaran performa kerja.
+
+## Panduan Membaca Kode
+
+Kode dipisahkan berdasarkan tahapan pipeline agar alurnya mudah dipelajari
+untuk tugas big data:
+
+```text
+data_loader.py
+    |
+    v
+model_trainer.py
+    |
+    v
+predictor.py
+    |
+    v
+api.py -> app.js -> dashboard
 ```
 
-Dataset contoh `big_data/reviews.csv` memiliki:
+Urutan yang disarankan ketika mempelajari kode:
 
-- kolom `review_text` sebagai teks utama;
-- kolom `rating` sebagai metadata numerik;
-- kolom `product` sebagai metadata teks;
-- 10 baris ulasan setelah header;
-- campuran ulasan bahasa Indonesia dan Inggris.
+1. Baca `employee_app/config.py` untuk melihat fitur, kategori, dan konstanta.
+2. Baca `employee_app/data_loader.py` untuk memahami validasi dataset.
+3. Ikuti fungsi `train_model()` di `employee_app/model_trainer.py`.
+4. Ikuti fungsi `predict()` di `employee_app/predictor.py`.
+5. Lihat endpoint `POST /api/predict` di `employee_app/api.py`.
+6. Lihat `playEducationalTrace()` di `static/js/app.js` untuk memahami cara
+   hasil perhitungan ditampilkan bertahap.
 
-Saat memilih kolom, pilih `review_text`. Jika memilih `product`, program akan
-mengelompokkan nama kategori produk, bukan isi ulasan.
+Alur training dapat dibaca sebagai pseudocode berikut:
 
-Catatan format:
+```python
+data = load_dataset()
+vector = preprocessor.fit_transform(data)
+cluster_id = kmeans.fit_predict(vector)
+svm.fit(vector, cluster_id)
+save_model()
+```
 
-- encoding CSV sebaiknya UTF-8;
-- delimiter yang diharapkan adalah koma;
-- file harus memiliki header;
-- nilai kosong atau `-` menyebabkan seluruh baris terkait dibuang;
-- dataset perlu memiliki setidaknya dua sampel karena K-Means menggunakan dua
-  cluster;
-- teks tidak boleh seluruhnya kosong atau seluruh tokennya terhapus sebagai
-  stopword.
+Alur prediksi:
+
+```python
+employee = validate_input(request)
+vector = preprocessor.transform(employee)
+kmeans_result = kmeans.predict(vector)
+svm_result = svm.predict(vector)
+probability = svm.predict_proba(vector)
+```
+
+Fungsi helper pada `predictor.py` menghasilkan trace edukatif. Trace tersebut
+tidak melakukan perhitungan baru yang berbeda dari model; nilainya diambil
+langsung dari scaler, encoder, K-Means, dan SVM yang dipakai saat inferensi.
 
 ## Instalasi
 
-Direkomendasikan menggunakan virtual environment agar dependency proyek tidak
-bercampur dengan instalasi Python global.
+Disarankan menggunakan Python 3.11 atau lebih baru.
 
-### macOS/Linux
+### macOS
 
 ```bash
 cd /path/ke/project-big-data
@@ -437,390 +351,299 @@ Dependency utama:
 
 | Library | Kegunaan |
 |---|---|
-| Pandas | Membaca dan memanipulasi CSV/DataFrame. |
-| NumPy | Operasi array dan indeks cluster. |
-| Matplotlib | Membuat dan menyimpan plot. |
-| Seaborn | Membuat scatter plot. |
-| scikit-learn | TF-IDF, K-Means, PCA, dan jarak Euclidean. |
-| WordCloud | Membuat awan kata. |
-| NLTK | Stopword bahasa Inggris. |
-| Sastrawi | Stopword bahasa Indonesia. |
+| Pandas | Membaca dan memvalidasi dataset. |
+| NumPy | Representasi numerik hasil model. |
+| scikit-learn | Preprocessing, K-Means, SVM, kalibrasi, dan metrik. |
+| Joblib | Menyimpan dan membaca cache model. |
+| Flask | Dashboard dan API internal. |
+| pywebview | Window desktop native lintas platform. |
 
-`scipy` juga diimpor langsung oleh kode dan normalnya terpasang sebagai
-dependency scikit-learn.
+## Menjalankan Aplikasi
 
-Pada eksekusi pertama, modul preprocessing akan mencari corpus stopword NLTK.
-Jika belum tersedia, program otomatis memakai daftar stopword bahasa Inggris
-bawaan scikit-learn. Corpus NLTK juga dapat diunduh secara manual:
-
-```bash
-python -m nltk.downloader stopwords
-```
-
-## Cara Menjalankan
-
-Jalankan program dari root proyek karena path `big_data/` dan `output/`
-bersifat relatif terhadap working directory:
+Aktifkan virtual environment, lalu:
 
 ```bash
 python main.py
 ```
 
-Contoh interaksi:
+Pada eksekusi pertama:
 
-```text
-Masukkan nama file data CSV (di dalam folder big_data/): reviews.csv
+1. dataset lokal divalidasi;
+2. K-Means dan SVM dilatih;
+3. artefak disimpan ke `artifacts/employee_profile_model.joblib`;
+4. window desktop dibuka.
 
-Kolom teks yang tersedia:
-  1. review_text
-  2. product
+Eksekusi berikutnya memakai cache sehingga startup lebih cepat.
 
-Masukkan nomor urut kolom teks utama (review): 1
-Kolom teks yang dipilih: 'review_text'
+Menutup window akan menghentikan aplikasi.
+
+## Menggunakan Dashboard
+
+1. Isi umur 18-60 tahun.
+2. Isi total pengalaman 0-40 tahun.
+3. Pilih tingkat pendidikan.
+4. Pilih departemen.
+5. Klik **Proses Data**.
+
+Dashboard tidak langsung membuka hasil. Panel `Execution Trace` menjalankan
+empat presentasi tahap:
+
+1. memvalidasi input;
+2. menampilkan standardisasi dan one-hot encoding;
+3. membandingkan jarak ke tiga centroid K-Means;
+4. menampilkan probabilitas kategori SVM.
+
+Interpretasi akhir baru dibuka setelah seluruh tahap selesai. Badge
+`Models agree` berarti SVM dan K-Means memberikan kategori sama.
+
+## REST API Internal
+
+API dipakai oleh JavaScript di dalam window desktop. API tidak ditujukan untuk
+deployment publik.
+
+### `GET /`
+
+Menampilkan dashboard.
+
+### `GET /api/health`
+
+Contoh:
+
+```json
+{
+  "model_loaded": true,
+  "pipeline_version": "1.1.0",
+  "status": "ready"
+}
 ```
 
-Ekstensi `.csv` boleh tidak ditulis:
+### `GET /api/model-info`
 
-```text
-Masukkan nama file data CSV (di dalam folder big_data/): reviews
+Mengembalikan jumlah data, daftar fitur, kategori, metrik, versi pipeline,
+status cache, dan disclaimer.
+
+### `POST /api/predict`
+
+Request:
+
+```json
+{
+  "age": 30,
+  "years_experience": 7,
+  "education_level": 4,
+  "department": "Research & Development"
+}
 ```
 
-Program akan otomatis mengubahnya menjadi `reviews.csv`.
+Respons ringkas:
 
-Selama proses berjalan, terminal menampilkan:
-
-- jumlah fitur sentimen yang mendapat boosting;
-- status K-Means dan PCA;
-- skor positif-negatif tiap cluster;
-- jumlah review yang dipindahkan saat reassignment;
-- laporan keyword dan representative review;
-- path setiap file output.
-
-## Output Program
-
-Semua hasil disimpan di folder `output/`, yang dibuat otomatis.
-
-```text
-output/
-|-- laporan_insight_sentimen.txt
-|-- cluster_scatter.png
-|-- distribusi_sentimen.png
-|-- wordcloud_positif.png
-`-- wordcloud_negatif.png
+```json
+{
+  "category": "Academic Achiever",
+  "svm": {
+    "cluster_id": 1,
+    "category": "Academic Achiever",
+    "confidence": 0.9844
+  },
+  "kmeans": {
+    "cluster_id": 1,
+    "category": "Academic Achiever"
+  },
+  "models_agree": true,
+  "process": {
+    "input_validation": {},
+    "preprocessing": {},
+    "kmeans": {},
+    "svm": {}
+  }
+}
 ```
 
-### `laporan_insight_sentimen.txt`
+Objek `process` berisi nilai perhitungan yang ditampilkan pada execution
+trace. Respons juga berisi deskripsi, ringkasan input, dan disclaimer.
 
-Berisi ringkasan untuk setiap sentimen:
+## Validasi Input
 
-- jumlah ulasan;
-- 10 top keywords;
-- maksimal 3 representative reviews.
-
-Struktur laporan:
-
-```text
-=== LAPORAN CLUSTERING SENTIMEN ===
-
-[POSITIF] - <jumlah> Ulasan
-Top Keywords: <keyword 1>, <keyword 2>, ...
-Representative Reviews:
-  1. <review>
-  2. <review>
---------------------------------------------------
-```
-
-File ditimpa setiap kali program dijalankan.
-
-### `cluster_scatter.png`
-
-Scatter plot koordinat PCA:
-
-- hijau menunjukkan Positif;
-- merah menunjukkan Negatif;
-- setiap titik mewakili satu review;
-- sumbu adalah dua principal component, bukan satuan bisnis langsung.
-
-Titik yang tumpang tindih menandakan representasi TF-IDF kedua review terlihat
-mirip pada proyeksi 2D. Plot tidak selalu menunjukkan seluruh struktur pada
-ruang fitur asli karena PCA mereduksi ribuan dimensi menjadi dua.
-
-### `distribusi_sentimen.png`
-
-Pie chart persentase jumlah review pada masing-masing label sentimen setelah
-reassignment.
-
-### `wordcloud_positif.png` dan `wordcloud_negatif.png`
-
-Word cloud dibuat dari teks yang sudah dibersihkan. Ukuran kata menunjukkan
-frekuensi kemunculan, bukan bobot TF-IDF atau tingkat kepentingan kausal.
-
-Word cloud hanya dibuat jika cluster terkait memiliki teks. File lama di
-folder `output/` tidak dibersihkan otomatis.
-
-## Konfigurasi Penting
-
-Konfigurasi masih ditulis langsung di source code.
-
-| Konfigurasi | Lokasi | Nilai saat ini | Dampak |
-|---|---|---:|---|
-| Batas sampling | `main.py` | `10000` | Membatasi jumlah review yang dianalisis. |
-| Jumlah cluster | `main.py` | `2` | Menghasilkan label Positif dan Negatif. |
-| Maksimal fitur | `modules/preprocessor.py` | `5000` | Membatasi ukuran vocabulary TF-IDF. |
-| Rentang n-gram | `modules/preprocessor.py` | `(1, 2)` | Menggunakan unigram dan bigram. |
-| Sentiment boost | `modules/clustering.py` | `10.0` | Menentukan kuatnya kata sentimen memengaruhi K-Means. |
-| Top keywords | `modules/clustering.py` | `10` | Jumlah keyword per cluster. |
-| Representative review | `modules/clustering.py` | `3` | Jumlah contoh review per cluster. |
-| Random seed | `main.py` dan `modules/clustering.py` | `42` | Membantu reproduksibilitas sampling dan clustering. |
-| Maksimal kata word cloud | `modules/visualizer.py` | `100` | Membatasi kata yang dirender. |
-
-Untuk menyesuaikan domain, bagian yang paling relevan adalah:
-
-- `CUSTOM_DOMAIN_STOPWORDS`;
-- `POSITIVE_WORDS`;
-- `NEGATIVE_WORDS`;
-- `SENTIMENT_BOOST_FACTOR`;
-- `SAMPLE_SIZE`.
-
-## Penjelasan Setiap Modul
-
-### `main.py`
-
-Mengatur pipeline dan interaksi pengguna. File ini tidak berisi detail
-algoritma utama, tetapi menghubungkan loader, preprocessor, clustering, dan
-visualizer.
-
-DataFrame selama proses mendapat kolom tambahan:
-
-| Kolom | Isi |
+| Field | Aturan |
 |---|---|
-| `Cluster` | ID cluster akhir setelah reassignment. |
-| `PCA1` | Koordinat principal component pertama. |
-| `PCA2` | Koordinat principal component kedua. |
-| `Sentimen` | Label hasil mapping cluster. |
-| `Cleaned_Text` | Teks setelah cleaning untuk word cloud. |
+| `age` | Bilangan bulat 18-60. |
+| `years_experience` | Bilangan bulat 0-40. |
+| `education_level` | Bilangan bulat 1-5. |
+| `department` | Salah satu dari tiga departemen dataset. |
 
-DataFrame tersebut tidak diekspor menjadi CSV pada implementasi saat ini.
+Pengalaman tidak boleh melebihi `age - 14`. Aturan ini mencegah kombinasi
+yang secara kronologis tidak masuk akal.
 
-### `modules/loader.py`
+Request tidak valid mendapat status HTTP `400`:
 
-Fungsi publik:
-
-```python
-load_data(filename)
+```json
+{
+  "error": "validation_error",
+  "message": "Data input tidak valid.",
+  "fields": {
+    "age": "Umur harus berada pada rentang 18-60."
+  }
+}
 ```
 
-Tanggung jawab:
+## Cache Model
 
-- memastikan ekstensi `.csv`;
-- membentuk path `big_data/<filename>`;
-- menghentikan program jika file tidak ditemukan;
-- membaca CSV;
-- menghapus baris yang mengandung nilai kosong.
+Artefak Joblib menyimpan:
 
-Kesalahan loader ditangani dengan pesan di terminal dan `sys.exit(1)`.
+- preprocessor;
+- K-Means;
+- calibrated SVM;
+- mapping ID cluster ke kategori;
+- metrik;
+- jumlah baris dataset;
+- SHA-256 dataset;
+- versi pipeline.
 
-### `modules/preprocessor.py`
+Model otomatis dilatih ulang jika:
 
-Fungsi publik:
+- file artefak tidak ada;
+- file tidak dapat dibaca;
+- hash dataset berubah;
+- `PIPELINE_VERSION` berubah.
 
-```python
-get_text_column(df)
-clean_text(text)
-prepare_features(df, text_col)
+Artefak diabaikan Git karena dapat dibuat ulang dari dataset lokal.
+
+Untuk memaksa training ulang:
+
+```bash
+rm artifacts/employee_profile_model.joblib
+python main.py
 ```
 
-Modul ini juga menginisialisasi stopword ketika pertama kali diimpor. Jika
-corpus NLTK belum tersedia, modul memakai stopword scikit-learn sehingga akses
-internet tidak diperlukan.
+Windows PowerShell:
 
-### `modules/clustering.py`
-
-Fungsi utama:
-
-```python
-boost_sentiment_features(...)
-run_kmeans(...)
-get_top_keywords(...)
-auto_label_clusters(...)
-reassign_by_sentiment(...)
-get_representative_reviews(...)
-reduce_dimensions_pca(...)
+```powershell
+Remove-Item artifacts\employee_profile_model.joblib
+python main.py
 ```
 
-Modul ini menyimpan leksikon sentimen sebagai Python `set`. Pencocokan
-leksikon memakai exact token matching, sehingga variasi kata yang tidak
-terdaftar tidak akan diberi skor.
+## Pengujian
 
-### `modules/visualizer.py`
+Pasang dependency development:
 
-Fungsi utama:
-
-```python
-setup_output_dir()
-plot_scatter_pca(...)
-plot_sentiment_distribution(...)
-plot_wordclouds(...)
+```bash
+python -m pip install -r requirements-dev.txt
 ```
 
-Setiap fungsi menyimpan gambar dengan resolusi 300 DPI dan menutup figure
-setelah penyimpanan, sehingga program tidak membuka jendela plot interaktif.
+Jalankan:
+
+```bash
+python -m pytest
+```
+
+Test suite mencakup:
+
+- schema dan hash dataset;
+- kode pendidikan dan departemen;
+- kelengkapan label cluster;
+- determinisme training;
+- ambang konsistensi SVM minimal 90%;
+- penggunaan dan invalidasi cache;
+- validasi seluruh field;
+- kontrak endpoint Flask;
+- rendering dashboard.
+- kelengkapan trace preprocessing, K-Means, dan SVM.
+
+## Kompatibilitas
+
+### macOS
+
+pywebview menggunakan Cocoa/WebKit melalui PyObjC. Dependency platform
+dipasang otomatis oleh pip.
+
+### Windows
+
+pywebview menggunakan renderer native Windows. Windows modern biasanya sudah
+memiliki Microsoft Edge WebView2 Runtime.
+
+Seluruh path aplikasi menggunakan `pathlib`, sehingga tidak bergantung pada
+format separator macOS atau Windows.
 
 ## Keterbatasan
 
-### Hanya Dua Sentimen
+### Bukan Model Performa Kerja
 
-Pipeline utama menggunakan `K=2`, sehingga hanya menghasilkan Positif dan
-Negatif. Review netral, ambigu, atau campuran tetap harus masuk ke salah satu
-cluster. Kata `Netral` di beberapa fungsi merupakan dukungan fallback untuk
-konfigurasi tiga cluster, bukan perilaku default program.
+Dataset memiliki `PerformanceRating`, tetapi empat input yang digunakan tidak
+mempunyai daya prediksi yang memadai terhadap rating tersebut. Karena itu,
+aplikasi secara sengaja memodelkan segmentasi profil K-Means.
 
-### Hasil Dipengaruhi Leksikon Manual
+### Segmentasi Bersifat Deskriptif
 
-Kata sentimen yang tidak ada dalam `POSITIVE_WORDS` atau `NEGATIVE_WORDS`
-tidak mendapat boosting dan tidak memengaruhi reassignment. Slang, typo,
-imbuhan, emoji, dan ekspresi domain khusus dapat terlewat.
+Kategori menggambarkan pola statistik dalam satu dataset IBM HR. Kategori
+tidak menyatakan kualitas, produktivitas, loyalitas, atau potensi seseorang.
 
-### Penanganan Negasi Terbatas
+### Fitur Terbatas
 
-Cleaning menggabungkan negasi bahasa Indonesia dengan satu token berikutnya,
-tetapi leksikon belum menafsirkan semua bentuk gabungan secara semantik.
-Contohnya, `tidak_bagus` tidak otomatis diperlakukan sebagai lawan dari
-`bagus` pada semua tahap. Negasi bahasa Inggris seperti `not good` juga tidak
-digabung oleh fungsi cleaning.
+Model hanya memakai umur, pengalaman, pendidikan, dan departemen. Banyak
+aspek penting seperti peran, skill, pencapaian, konteks organisasi, dan
+preferensi individu tidak tersedia.
 
-### Tokenisasi Reassignment Sederhana
+### Dataset Bukan Data Organisasi Pengguna
 
-Reassignment memakai `lower().split()` pada teks mentah. Tanda baca tetap
-menempel pada token. Kata seperti `great!` atau `rusak.` tidak sama persis
-dengan `great` atau `rusak`, sehingga dapat tidak terhitung.
+Hasil merefleksikan distribusi dataset contoh. Untuk penggunaan nyata,
+pipeline perlu dievaluasi ulang menggunakan data organisasi yang sah,
+representatif, dan telah ditinjau dari sisi fairness serta privasi.
 
-### Auto-Labeling Bersifat Relatif
+### Confidence Bukan Jaminan
 
-Cluster dengan skor tertinggi selalu dinamai Positif dan yang terendah selalu
-dinamai Negatif. Jika dataset seluruhnya positif atau seluruhnya negatif,
-program tetap memaksakan dua label.
-
-### Penggunaan Memori
-
-Beberapa tahap mengubah sparse matrix menjadi dense:
-
-- `get_top_keywords()` melalui `X_tfidf.todense()`;
-- `reduce_dimensions_pca()` melalui `X_tfidf.toarray()`.
-
-Sampling 10.000 baris mengurangi risiko, tetapi kombinasi 10.000 baris dan
-5.000 fitur masih dapat memakai memori ratusan megabyte. Batas sampling bukan
-jaminan bahwa program selalu aman pada mesin dengan RAM terbatas.
-
-### Baris Kosong Dihapus Secara Agresif
-
-Satu baris akan dihapus jika kolom mana pun kosong, meskipun kolom tersebut
-tidak digunakan untuk analisis. Dataset dengan metadata opsional dapat
-kehilangan banyak review.
-
-### Belum Ada Evaluasi Akurasi
-
-Program tidak memakai label ground truth dan tidak menghitung accuracy,
-precision, recall, F1-score, silhouette score, atau metrik evaluasi lainnya.
-Output perlu divalidasi secara manual melalui keyword dan representative
-review.
-
-### Belum Ada Penyimpanan Hasil Tabular
-
-Label akhir hanya berada di DataFrame selama program berjalan. Program belum
-menyimpan CSV baru yang berisi review beserta label sentimennya.
+Confidence berasal dari SVM yang dikalibrasi terhadap label K-Means. Nilai
+tinggi hanya menunjukkan bahwa input dekat dengan pola segmentasi yang
+dipelajari.
 
 ## Troubleshooting
 
 ### `ModuleNotFoundError`
 
-Pastikan virtual environment aktif dan dependency sudah terpasang:
+Aktifkan virtual environment dan pasang ulang dependency:
 
 ```bash
+source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-### NLTK gagal mengunduh stopword
+Windows:
 
-Unduh corpus secara manual saat koneksi internet tersedia:
+```powershell
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+```
+
+### Window tidak muncul di macOS
+
+Pastikan menjalankan Python framework build atau Python resmi dari
+python.org/Homebrew dan seluruh dependency pywebview terpasang:
 
 ```bash
-python -m nltk.downloader stopwords
+python -m pip install --force-reinstall pywebview
 ```
 
-### File CSV tidak ditemukan
+Jalankan aplikasi dari session desktop macOS, bukan SSH tanpa GUI.
 
-Pastikan:
+### Window kosong di Windows
 
-- program dijalankan dari root proyek;
-- file berada di folder `big_data/`;
-- nama dan kapitalisasi file sesuai;
-- input berupa nama file, bukan path absolut.
+Pasang atau perbarui Microsoft Edge WebView2 Runtime, kemudian jalankan ulang
+aplikasi.
 
-Contoh yang benar:
+### Model gagal dimuat
 
-```text
-big_data/my_reviews.csv
+Hapus artefak agar pipeline melakukan training ulang:
+
+```bash
+rm artifacts/employee_profile_model.joblib
+python main.py
 ```
 
-Kemudian masukkan:
+### Dataset dianggap tidak valid
 
-```text
-my_reviews.csv
-```
+Pastikan `data/employee_attrition.csv` tidak diubah dan tetap memiliki header
+asli. Dataset yang dimodifikasi akan divalidasi sebelum training.
 
-### `empty vocabulary`
+### Training terjadi setiap startup
 
-Error ini dapat muncul jika semua teks kosong atau seluruh token terhapus
-sebagai stopword. Periksa kolom yang dipilih dan isi
-`CUSTOM_DOMAIN_STOPWORDS`.
-
-### Jumlah sampel lebih sedikit daripada jumlah cluster
-
-K-Means membutuhkan minimal dua baris valid karena `K=2`. Tambahkan data atau
-pastikan proses `dropna()` tidak menghapus hampir seluruh dataset.
-
-### PCA kehabisan memori
-
-Kurangi `SAMPLE_SIZE` di `main.py` atau `max_features` di
-`modules/preprocessor.py`. Untuk pengembangan lebih lanjut, PCA dense dapat
-diganti dengan `TruncatedSVD`, yang dapat bekerja langsung pada sparse matrix.
-
-### Word cloud tidak dibuat
-
-Word cloud dilewati jika cluster tidak memiliki teks. Periksa jumlah anggota
-cluster dan pastikan teks tidak kosong setelah cleaning.
-
-## Pengembangan Lanjutan
-
-Beberapa peningkatan yang paling relevan:
-
-1. Menambahkan argumen command-line agar nama file dan kolom dapat diberikan
-   tanpa input interaktif.
-2. Mengekspor DataFrame beserta kolom `Cluster` dan `Sentimen` ke CSV.
-3. Memakai preprocessing yang sama untuk reassignment agar tanda baca dan
-   negasi ditangani secara konsisten.
-4. Menambahkan stemming atau lemmatization untuk variasi bentuk kata.
-5. Memperluas leksikon, termasuk slang, emoji, dan istilah domain.
-6. Menambahkan label Netral dengan strategi yang tidak sekadar memaksakan
-   cluster ketiga.
-7. Menggunakan `MiniBatchKMeans` dan `TruncatedSVD` untuk dataset lebih besar.
-8. Menambahkan pengujian unit untuk cleaning, labeling, dan reassignment.
-9. Menambahkan evaluasi terhadap dataset berlabel.
-10. Membandingkan hasil dengan model supervised atau transformer multilingual.
-
-## Ringkasan
-
-Proyek ini mengubah review mentah menjadi insight melalui rangkaian:
-
-```text
-cleaning -> TF-IDF -> sentiment boosting -> K-Means ->
-auto-labeling -> reassignment -> report dan visualisasi
-```
-
-Kekuatan utamanya adalah pipeline yang sederhana, modular, bilingual, dan
-mudah dijelaskan. Hal yang perlu diperhatikan adalah label akhir sangat
-dipengaruhi daftar kata manual dan program selalu memaksa pembagian ke dua
-sentimen. Karena itu, hasil paling tepat dipakai sebagai analisis eksploratif
-dan tetap perlu diperiksa melalui keyword serta representative review yang
-dihasilkan.
+Pastikan aplikasi mempunyai izin tulis pada folder `artifacts/` dan file
+dataset tidak berubah.
