@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import re
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
 from sklearn.preprocessing import StandardScaler
 import scipy.sparse as sp
 
@@ -9,14 +10,16 @@ import nltk
 from nltk.corpus import stopwords
 from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
 
-# Initialize Stopwords
+# Combine English (NLTK) and Indonesian (Sastrawi) stopwords
 try:
     nltk.data.find('corpora/stopwords')
+    stop_words_eng = set(stopwords.words('english'))
 except LookupError:
-    nltk.download('stopwords')
-
-# Combine English (NLTK) and Indonesian (Sastrawi) stopwords
-stop_words_eng = set(stopwords.words('english'))
+    print(
+        "Peringatan: Corpus stopwords NLTK tidak tersedia. "
+        "Menggunakan stopwords bahasa Inggris bawaan scikit-learn."
+    )
+    stop_words_eng = set(ENGLISH_STOP_WORDS)
 factory = StopWordRemoverFactory()
 stop_words_ind = set(factory.get_stop_words())
 

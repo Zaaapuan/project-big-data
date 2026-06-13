@@ -1,0 +1,16 @@
+=== LAPORAN CLUSTERING SENTIMEN ===
+
+[POSITIF] - 4 Ulasan
+Top Keywords: bagus, bagus suka, suka, great, bagus mantap, mantap, puas, puas bagus, perfect, perfect works
+Representative Reviews:
+  1. Barang lumayan bagus untuk harganya. Suka sekali.
+  2. Sangat puas dengan barang ini! Bagus sekali dan mantap.
+  3. Very satisfied, the product is perfect and works great.
+--------------------------------------------------
+[NEGATIF] - 6 Ulasan
+Top Keywords: disappointed, slow, slow disappointed, awful, awful worst, broken, hate, jelek, jelek rusak, kecewa
+Representative Reviews:
+  1. The headphones are average. Not bad but not excellent.
+  2. Pelayanan lambat dan respon penjual sangat buruk.
+  3. Terrible product. The screen was broken upon arrival.
+--------------------------------------------------
