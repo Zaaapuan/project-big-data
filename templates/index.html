@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Dashboard Clustering Karyawan</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="dashboard-header">
+      <div>
+        <p class="course-label">TUGAS BIG DATA</p>
+        <h1>Dashboard Clustering Profil Karyawan</h1>
+        <p class="header-description">
+          Segmentasi data IBM HR menggunakan K-Means dan klasifikasi SVM.
+        </p>
+      </div>
+      <div class="model-status" id="model-status" role="status" aria-live="polite">
+        <span class="status-dot"></span>
+        <span id="status-text">Memuat model</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="project-summary" aria-label="Informasi proyek">
+        <dl>
+          <div>
+            <dt>Dataset</dt>
+            <dd>IBM HR Employee Attrition</dd>
+          </div>
+          <div>
+            <dt>Metode utama</dt>
+            <dd>K-Means, K = 3</dd>
+          </div>
+          <div>
+            <dt>Model klasifikasi</dt>
+            <dd>Calibrated RBF SVM</dd>
+          </div>
+          <div>
+            <dt>Fitur</dt>
+            <dd>Age, Experience, Education, Department</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="metric-grid" aria-label="Ringkasan dataset dan model">
+        <article class="metric-card">
+          <span>Jumlah data</span>
+          <strong id="dataset-rows">--</strong>
+          <small>baris karyawan</small>
+        </article>
+        <article class="metric-card">
+          <span>Jumlah fitur</span>
+          <strong>4</strong>
+          <small>fitur input</small>
+        </article>
+        <article class="metric-card">
+          <span>Jumlah cluster</span>
+          <strong id="category-count">3</strong>
+          <small>kelompok profil</small>
+        </article>
+        <article class="metric-card">
+          <span>Konsistensi SVM</span>
+          <strong id="model-accuracy">--</strong>
+          <small>terhadap label K-Means</small>
+        </article>
+      </section>
+
+      <section class="model-reference" aria-labelledby="model-reference-title">
+        <div class="section-title">
+          <span class="section-number">A</span>
+          <div>
+            <h2 id="model-reference-title">Konfigurasi Analisis</h2>
+            <p>Ringkasan tahapan yang digunakan pada pipeline machine learning.</p>
+          </div>
+        </div>
+
+        <div class="method-table" role="table" aria-label="Konfigurasi algoritma">
+          <div class="method-row method-header" role="row">
+            <span role="columnheader">Tahap</span>
+            <span role="columnheader">Teknik</span>
+            <span role="columnheader">Tujuan</span>
+          </div>
+          <div class="method-row" role="row">
+            <span role="cell">Preprocessing numerik</span>
+            <code role="cell">StandardScaler</code>
+            <span role="cell">Menyamakan skala Age, Experience, dan Education.</span>
+          </div>
+          <div class="method-row" role="row">
+            <span role="cell">Preprocessing kategori</span>
+            <code role="cell">OneHotEncoder</code>
+            <span role="cell">Mengubah Department menjadi fitur biner.</span>
+          </div>
+          <div class="method-row" role="row">
+            <span role="cell">Clustering</span>
+            <code role="cell">KMeans(n_clusters=3)</code>
+            <span role="cell">Membentuk tiga kelompok profil karyawan.</span>
+          </div>
+          <div class="method-row" role="row">
+            <span role="cell">Klasifikasi</span>
+            <code role="cell">CalibratedClassifierCV(SVC)</code>
+            <span role="cell">Mempelajari dan memprediksi label cluster.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="analysis-section" aria-labelledby="analysis-title">
+        <div class="section-title">
+          <span class="section-number">B</span>
+          <div>
+            <h2 id="analysis-title">Simulasi Data Karyawan</h2>
+            <p>Masukkan satu data baru untuk mengikuti proses inferensi model.</p>
+          </div>
+        </div>
+
+        <div class="analysis-grid">
+          <article class="panel form-panel">
+            <div class="panel-header">
+              <div>
+                <span class="panel-step">LANGKAH 1</span>
+                <h3>Input Data</h3>
+              </div>
+              <code>POST /api/predict</code>
+            </div>
+
+            <div class="error-banner" id="error-banner" role="alert" hidden>
+              <strong>Input belum valid.</strong>
+              <span id="error-message"></span>
+            </div>
+
+            <form id="prediction-form" novalidate>
+              <div class="form-grid">
+                <div class="field-group">
+                  <label for="age">Umur</label>
+                  <div class="input-with-unit">
+                    <input id="age" name="age" type="number" min="18" max="60"
+                           step="1" inputmode="numeric" placeholder="30"
+                           aria-describedby="age-hint age-error" required>
+                    <span>tahun</span>
+                  </div>
+                  <small id="age-hint">Rentang dataset: 18-60</small>
+                  <small class="field-error" id="age-error"></small>
+                </div>
+
+                <div class="field-group">
+                  <label for="years-experience">Total pengalaman</label>
+                  <div class="input-with-unit">
+                    <input id="years-experience" name="years_experience"
+                           type="number" min="0" max="40" step="1"
+                           inputmode="numeric" placeholder="7"
+                           aria-describedby="experience-hint years-experience-error"
+                           required>
+                    <span>tahun</span>
+                  </div>
+                  <small id="experience-hint">Rentang dataset: 0-40</small>
+                  <small class="field-error" id="years-experience-error"></small>
+                </div>
+
+                <div class="field-group">
+                  <label for="education-level">Tingkat pendidikan</label>
+                  <div class="select-wrap">
+                    <select id="education-level" name="education_level"
+                            aria-describedby="education-level-error" required>
+                      <option value="">Pilih pendidikan</option>
+                      <option value="1">1 - Below College</option>
+                      <option value="2">2 - College</option>
+                      <option value="3">3 - Bachelor</option>
+                      <option value="4">4 - Master</option>
+                      <option value="5">5 - Doctor</option>
+                    </select>
+                  </div>
+                  <small>Kode 1-5 sesuai dataset</small>
+                  <small class="field-error" id="education-level-error"></small>
+                </div>
+
+                <div class="field-group">
+                  <label for="department">Departemen</label>
+                  <div class="select-wrap">
+                    <select id="department" name="department"
+                            aria-describedby="department-error" required>
+                      <option value="">Pilih departemen</option>
+                      <option value="Human Resources">Human Resources</option>
+                      <option value="Research & Development">Research & Development</option>
+                      <option value="Sales">Sales</option>
+                    </select>
+                  </div>
+                  <small>Akan diproses dengan one-hot encoding</small>
+                  <small class="field-error" id="department-error"></small>
+                </div>
+              </div>
+
+              <p class="validation-note">
+                Validasi tambahan: pengalaman tidak boleh melebihi umur
+                dikurangi 14 tahun.
+              </p>
+
+              <button class="primary-button" id="predict-button" type="submit">
+                <span class="button-label">PROSES DATA</span>
+                <span class="button-loader" aria-hidden="true"></span>
+              </button>
+            </form>
+          </article>
+
+          <article class="panel trace-panel" aria-live="polite">
+            <div class="panel-header">
+              <div>
+                <span class="panel-step">LANGKAH 2</span>
+                <h3>Proses Model</h3>
+              </div>
+              <span class="run-state" id="run-state">IDLE</span>
+            </div>
+
+            <div class="trace-intro" id="trace-intro">
+              <p>
+                Detail validasi, preprocessing, jarak centroid, dan
+                probabilitas SVM akan ditampilkan di bagian ini.
+              </p>
+              <code>Menunggu data input...</code>
+            </div>
+
+            <ol class="pipeline-steps" id="pipeline-steps" hidden>
+              <li class="pipeline-step" data-step="validation">
+                <div class="step-marker">1</div>
+                <div class="step-body">
+                  <div class="step-heading">
+                    <div>
+                      <span class="step-command">VALIDASI</span>
+                      <h4>Pemeriksaan input</h4>
+                    </div>
+                    <span class="step-status">MENUNGGU</span>
+                  </div>
+                  <div class="step-output" id="validation-output"></div>
+                </div>
+              </li>
+
+              <li class="pipeline-step" data-step="preprocessing">
+                <div class="step-marker">2</div>
+                <div class="step-body">
+                  <div class="step-heading">
+                    <div>
+                      <span class="step-command">PREPROCESSING</span>
+                      <h4>Standardisasi dan encoding</h4>
+                    </div>
+                    <span class="step-status">MENUNGGU</span>
+                  </div>
+                  <div class="step-output" id="preprocessing-output"></div>
+                </div>
+              </li>
+
+              <li class="pipeline-step" data-step="kmeans">
+                <div class="step-marker">3</div>
+                <div class="step-body">
+                  <div class="step-heading">
+                    <div>
+                      <span class="step-command">K-MEANS</span>
+                      <h4>Perhitungan jarak centroid</h4>
+                    </div>
+                    <span class="step-status">MENUNGGU</span>
+                  </div>
+                  <div class="step-output" id="kmeans-output"></div>
+                </div>
+              </li>
+
+              <li class="pipeline-step" data-step="svm">
+                <div class="step-marker">4</div>
+                <div class="step-body">
+                  <div class="step-heading">
+                    <div>
+                      <span class="step-command">SVM</span>
+                      <h4>Klasifikasi probabilitas</h4>
+                    </div>
+                    <span class="step-status">MENUNGGU</span>
+                  </div>
+                  <div class="step-output" id="svm-output"></div>
+                </div>
+              </li>
+            </ol>
+          </article>
+        </div>
+
+        <article class="result-panel" id="result-section" hidden aria-live="polite">
+          <div class="panel-header result-header">
+            <div>
+              <span class="panel-step">LANGKAH 3</span>
+              <h3>Hasil Analisis</h3>
+            </div>
+            <span class="agreement-badge" id="agreement-badge"></span>
+          </div>
+
+          <div class="result-layout">
+            <section class="result-main">
+              <span class="result-label">Kategori profil</span>
+              <h2 id="result-category"></h2>
+              <p id="result-description"></p>
+            </section>
+
+            <section class="confidence-block">
+              <div>
+                <span>Confidence SVM</span>
+                <strong id="confidence-value"></strong>
+              </div>
+              <div class="confidence-track" role="progressbar"
+                   aria-label="Confidence model" aria-valuemin="0"
+                   aria-valuemax="100" id="confidence-track">
+                <span id="confidence-bar"></span>
+              </div>
+              <small>Confidence terhadap label segmentasi K-Means.</small>
+            </section>
+
+            <section class="comparison-table" aria-label="Perbandingan hasil model">
+              <div class="table-header">
+                <span>Model</span>
+                <span>Hasil</span>
+              </div>
+              <div>
+                <strong>SVM</strong>
+                <span id="svm-result"></span>
+              </div>
+              <div>
+                <strong>K-Means</strong>
+                <span id="kmeans-result"></span>
+              </div>
+            </section>
+
+            <section class="input-summary">
+              <span class="summary-title">Data input</span>
+              <div id="input-summary"></div>
+            </section>
+          </div>
+
+          <p class="disclaimer" id="result-disclaimer"></p>
+        </article>
+      </section>
+    </main>
+
+    <footer>
+      <span>Dashboard Clustering Profil Karyawan</span>
+      <span>Pipeline v<strong id="pipeline-version">--</strong></span>
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
