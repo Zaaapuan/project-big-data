@@ -42,7 +42,7 @@ Sastrawi
 
 ### K-Means Clustering (K=3)
 K-Means digunakan untuk mengelompokkan data teks ke dalam 3 kelompok besar berdasarkan kedekatan/kemiripan fitur kata.
-- **K = 3** (Ditetapkan secara hardcode untuk sentimen Positif, Negatif, dan Netral).
+- **K = 2** (Ditetapkan secara hardcode untuk sentimen Positif dan Negatif).
 
 ### Stopwords (Inggris & Indonesia)
 Untuk membuang kata-kata umum yang tidak bermakna (seperti "dan", "yang", "is", "the"), program menggunakan library standar:
@@ -65,7 +65,7 @@ Sistem rentan salah mengklasifikasikan frasa seperti "tidak buruk" karena kata "
    - Penghapusan Stopwords menggunakan *Sastrawi* dan *NLTK*.
 3. **Ekstraksi Fitur**: Mengubah teks bersih menjadi matriks angka menggunakan TF-IDF.
 4. **Clustering**: Menjalankan K-Means dengan K=3.
-5. **Pelabelan Otomatis (Labeling)**: Menentukan label (Positif, Negatif, Netral) pada masing-masing cluster menggunakan lexicon base scoring sederhana atau analisis proporsi *Top Keywords*.
+5. **Pelabelan Otomatis (Labeling)**: Menentukan label (Positif, Negatif) pada masing-masing cluster menggunakan lexicon base scoring sederhana atau analisis proporsi *Top Keywords*.
 6. **Ekstraksi Insight**: Mengambil *Top Keywords* dan representasi kalimat (*Representative Reviews*) untuk setiap cluster.
 7. **Visualisasi & Output**: Menghasilkan scatter plot, grafik distribusi, dan word cloud.
 
@@ -78,7 +78,7 @@ Sesuai dengan kebutuhan pengambilan keputusan, output yang dihasilkan disederhan
 ### 1. Visualisasi Cluster (Peta Kelompok)
 Scatter Plot yang mengubah dimensi data TF-IDF yang kompleks menjadi 2 Dimensi (2D).
 - **Metode**: Menggunakan algoritma **PCA** (Principal Component Analysis) atau **t-SNE**.
-- **Fungsi**: Memperlihatkan secara visual sebaran "bola" kelompok review tersebut. Manajemen dapat melihat apakah ulasan Positif, Negatif, dan Netral terpisah secara tegas atau ada yang menumpuk di area abu-abu. Disimpan sebagai gambar (misal: `cluster_scatter.png`).
+- **Fungsi**: Memperlihatkan secara visual sebaran "bola" kelompok review tersebut. Manajemen dapat melihat apakah ulasan Positif dan Negatif terpisah secara tegas atau ada yang menumpuk di area abu-abu. Disimpan sebagai gambar (misal: `cluster_scatter.png`).
 
 ### 2. Label Cluster & Interpretasi (*The "Why"*)
 Sistem tidak hanya mencetak angka "Cluster 0, 1, 2", melainkan memberikan konteks dan pembuktian (disimpan ke dalam file teks laporan atau dicetak di terminal):
@@ -92,7 +92,7 @@ Laporan persentase untuk pengambilan keputusan manajemen secara cepat.
 
 ### 4. Word Cloud (Awan Kata per Cluster)
 Visualisasi ukuran kata yang proporsional dengan frekuensi kemunculannya.
-- **Visualisasi**: 3 buah Word Cloud terpisah untuk setiap cluster (Positif, Negatif, Netral).
+- **Visualisasi**: 3 buah Word Cloud terpisah untuk setiap cluster (Positif, Negatif).
 - **Fungsi**: Sangat efektif untuk bahan presentasi. Word Cloud untuk cluster Negatif, misalnya, akan langsung menonjolkan permasalahan utama (misal kata "ONGKIR" atau "RESPON" muncul paling besar). Disimpan sebagai gambar (misal: `wordcloud_positif.png`, `wordcloud_negatif.png`, `wordcloud_netral.png`).
 
 ---
