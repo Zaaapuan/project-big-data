@@ -23,6 +23,9 @@ def test_dashboard_and_health_endpoints(predictor):
     assert dashboard.data.count(b'class="stepper-item') == 6
     assert b'id="baseline-cluster-plot"' in dashboard.data
     assert b'id="prediction-cluster-plot"' in dashboard.data
+    assert b'id="plot-lightbox"' in dashboard.data
+    assert b"RUMUS JARAK" not in dashboard.data
+    assert b"Semakin kecil jarak" in dashboard.data
     assert b"/static/css/styles.css" in dashboard.data
     font = client.get("/static/fonts/Rubik-Variable.ttf")
     stylesheet = client.get("/static/css/styles.css")

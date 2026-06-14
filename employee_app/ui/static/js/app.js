@@ -5,6 +5,10 @@ const errorMessage = document.querySelector("#error-message");
 const screens = [...document.querySelectorAll(".wizard-screen")];
 const stepperItems = [...document.querySelectorAll(".stepper-item")];
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const lightbox = document.querySelector("#plot-lightbox");
+const lightboxImage = document.querySelector("#lightbox-image");
+const lightboxViewport = document.querySelector("#lightbox-viewport");
+const zoomResetButton = document.querySelector("#zoom-reset");
 
 const fieldMap = {
   age: "age",
@@ -16,6 +20,8 @@ const fieldMap = {
 let currentStep = 0;
 let predictionResult = null;
 let modelInfo = null;
+let lightboxZoom = 1;
+let activePlotFrame = null;
 
 const clusterColors = {
   "Emerging Talent": "#6a5fc1",
@@ -304,6 +310,40 @@ function downloadPlot(plotType) {
   link.click();
 }
 
+function applyLightboxZoom() {
+  const naturalWidth = Number(lightboxImage.dataset.naturalWidth);
+  lightboxImage.style.width = `${naturalWidth * lightboxZoom}px`;
+  zoomResetButton.textContent = `${Math.round(lightboxZoom * 100)}%`;
+}
+
+function setLightboxZoom(nextZoom) {
+  lightboxZoom = Math.min(4, Math.max(0.5, nextZoom));
+  applyLightboxZoom();
+}
+
+function openPlotLightbox(frame) {
+  const canvas = document.querySelector(`#${frame.dataset.zoomCanvas}`);
+  activePlotFrame = frame;
+  lightboxImage.src = canvas.toDataURL("image/png");
+  lightboxImage.dataset.naturalWidth = String(canvas.width);
+  document.querySelector("#lightbox-title").textContent =
+    canvas.getAttribute("aria-label");
+  lightbox.hidden = false;
+  document.body.style.overflow = "hidden";
+  setLightboxZoom(1);
+  lightboxViewport.scrollTop = 0;
+  lightboxViewport.scrollLeft = 0;
+  document.querySelector("#close-lightbox").focus();
+}
+
+function closePlotLightbox() {
+  lightbox.hidden = true;
+  lightboxImage.removeAttribute("src");
+  document.body.style.overflow = "";
+  activePlotFrame?.focus();
+  activePlotFrame = null;
+}
+
 function clearErrors() {
   errorBanner.hidden = true;
   Object.values(fieldMap).forEach((fieldId) => {
@@ -506,6 +546,46 @@ document.querySelectorAll("[data-download-plot]").forEach((button) => {
   button.addEventListener("click", () => {
     downloadPlot(button.dataset.downloadPlot);
   });
+});
+
+document.querySelectorAll("[data-zoom-canvas]").forEach((frame) => {
+  frame.addEventListener("click", () => openPlotLightbox(frame));
+  frame.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openPlotLightbox(frame);
+    }
+  });
+});
+
+document.querySelector("#zoom-out").addEventListener("click", () => {
+  setLightboxZoom(lightboxZoom - 0.25);
+});
+document.querySelector("#zoom-in").addEventListener("click", () => {
+  setLightboxZoom(lightboxZoom + 0.25);
+});
+zoomResetButton.addEventListener("click", () => setLightboxZoom(1));
+document.querySelector("#close-lightbox").addEventListener(
+  "click",
+  closePlotLightbox,
+);
+lightboxViewport.addEventListener("wheel", (event) => {
+  event.preventDefault();
+  setLightboxZoom(lightboxZoom + (event.deltaY < 0 ? 0.15 : -0.15));
+}, {passive: false});
+document.addEventListener("keydown", (event) => {
+  if (lightbox.hidden) {
+    return;
+  }
+  if (event.key === "Escape") {
+    closePlotLightbox();
+  } else if (event.key === "+" || event.key === "=") {
+    setLightboxZoom(lightboxZoom + 0.25);
+  } else if (event.key === "-") {
+    setLightboxZoom(lightboxZoom - 0.25);
+  } else if (event.key === "0") {
+    setLightboxZoom(1);
+  }
 });
 
 document.querySelector("#restart-button").addEventListener("click", () => {

@@ -73,7 +73,9 @@
                 UNDUH PNG LAPORAN
               </button>
             </div>
-            <div class="plot-frame">
+            <div class="plot-frame" data-zoom-canvas="baseline-cluster-plot"
+                 tabindex="0" role="button"
+                 aria-label="Buka plot dataset lama dalam layar penuh">
               <canvas id="baseline-cluster-plot" width="1200" height="500"
                       role="img"
                       aria-label="Plot PCA dataset training dan centroid K-Means"></canvas>
@@ -234,19 +236,19 @@
                 UNDUH PNG LAPORAN
               </button>
             </div>
-            <div class="plot-frame">
+            <div class="plot-frame" data-zoom-canvas="prediction-cluster-plot"
+                 tabindex="0" role="button"
+                 aria-label="Buka plot data baru dalam layar penuh">
               <canvas id="prediction-cluster-plot" width="1200" height="460"
                       role="img"
                       aria-label="Plot PCA dengan data karyawan baru"></canvas>
             </div>
             <div class="plot-legend" id="prediction-legend"></div>
           </div>
-          <div class="model-explanation compact-explanation">
-            <div class="formula-panel">
-              <span class="card-index">RUMUS JARAK</span>
-              <div class="large-formula">d(x, c) = √Σ(xᵢ - cᵢ)²</div>
-              <p>Semakin kecil jarak, semakin mirip data karyawan dengan karakteristik centroid tersebut.</p>
-            </div>
+          <p class="distance-note">
+            Semakin kecil jarak, semakin mirip data karyawan dengan karakteristik centroid tersebut.
+          </p>
+          <div class="kmeans-distance-panel">
             <div>
               <h3>Perbandingan jarak centroid</h3>
               <div id="kmeans-output" class="model-bars"></div>
@@ -341,6 +343,27 @@
       <span>Pipeline v<strong id="pipeline-version">--</strong></span>
     </footer>
   </div>
+
+  <div class="plot-lightbox" id="plot-lightbox" hidden
+       role="dialog" aria-modal="true" aria-labelledby="lightbox-title">
+    <div class="lightbox-header">
+      <div>
+        <span class="eyebrow">VISUALISASI PLOT</span>
+        <h2 id="lightbox-title">Tampilan Layar Penuh</h2>
+      </div>
+      <div class="lightbox-controls">
+        <button type="button" id="zoom-out" aria-label="Perkecil gambar">−</button>
+        <button type="button" id="zoom-reset" aria-label="Reset zoom">100%</button>
+        <button type="button" id="zoom-in" aria-label="Perbesar gambar">+</button>
+        <button type="button" id="close-lightbox" aria-label="Tutup layar penuh">×</button>
+      </div>
+    </div>
+    <div class="lightbox-viewport" id="lightbox-viewport">
+      <img id="lightbox-image" alt="Plot clustering dalam layar penuh">
+    </div>
+    <p>Gunakan roda mouse atau tombol +/− untuk zoom. Tekan Esc untuk menutup.</p>
+  </div>
+
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
