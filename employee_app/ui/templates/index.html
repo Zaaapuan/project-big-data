@@ -26,32 +26,74 @@
         <button class="stepper-item active" type="button" data-step-target="0"
                 aria-current="step">
           <span>1</span>
-          <strong>Input Data</strong>
+          <strong>Dataset Lama</strong>
         </button>
-        <button class="stepper-item" type="button" data-step-target="1" disabled>
+        <button class="stepper-item" type="button" data-step-target="1">
           <span>2</span>
-          <strong>Preprocessing</strong>
+          <strong>Input Data</strong>
         </button>
         <button class="stepper-item" type="button" data-step-target="2" disabled>
           <span>3</span>
-          <strong>K-Means</strong>
+          <strong>Preprocessing</strong>
         </button>
         <button class="stepper-item" type="button" data-step-target="3" disabled>
           <span>4</span>
-          <strong>SVM</strong>
+          <strong>K-Means</strong>
         </button>
         <button class="stepper-item" type="button" data-step-target="4" disabled>
           <span>5</span>
+          <strong>SVM</strong>
+        </button>
+        <button class="stepper-item" type="button" data-step-target="5" disabled>
+          <span>6</span>
           <strong>Ringkasan</strong>
         </button>
       </nav>
 
       <div class="wizard-content">
         <section class="wizard-screen active" data-screen="0"
+                 aria-labelledby="dataset-title">
+          <div class="screen-heading">
+            <div>
+              <span class="eyebrow">TAHAP 1 DARI 6</span>
+              <h2 id="dataset-title">Hasil Clustering Dataset Lama</h2>
+              <p>Visualisasi awal memperlihatkan 1.470 data training dan posisi centroid sebelum data karyawan baru dimasukkan.</p>
+            </div>
+            <code>PCA(n_components=2)</code>
+          </div>
+
+          <div class="plot-report">
+            <div class="plot-toolbar">
+              <div>
+                <strong>Proyeksi PCA 2D hasil K-Means</strong>
+                <span id="variance-summary">Memuat data visualisasi...</span>
+              </div>
+              <button class="secondary-button compact-button" type="button"
+                      data-download-plot="baseline">
+                UNDUH PNG LAPORAN
+              </button>
+            </div>
+            <div class="plot-frame">
+              <canvas id="baseline-cluster-plot" width="1200" height="500"
+                      role="img"
+                      aria-label="Plot PCA dataset training dan centroid K-Means"></canvas>
+            </div>
+            <div class="plot-legend" id="baseline-legend"></div>
+            <p class="plot-note" id="plot-note"></p>
+          </div>
+
+          <div class="screen-actions align-right">
+            <button class="primary-button" type="button" data-go-step="1">
+              LANJUT KE INPUT DATA
+            </button>
+          </div>
+        </section>
+
+        <section class="wizard-screen" data-screen="1" hidden
                  aria-labelledby="input-title">
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 1 DARI 5</span>
+              <span class="eyebrow">TAHAP 2 DARI 6</span>
               <h2 id="input-title">Masukkan Data Karyawan</h2>
               <p>Data ini akan diproses oleh pipeline yang telah dilatih dari 1.470 baris dataset IBM HR.</p>
             </div>
@@ -124,7 +166,10 @@
               </div>
             </div>
 
-            <div class="screen-actions align-right">
+            <div class="screen-actions">
+              <button class="secondary-button" type="button" data-go-step="0">
+                KEMBALI
+              </button>
               <button class="primary-button" id="predict-button" type="submit">
                 <span class="button-label">MULAI ANALISIS</span>
                 <span class="button-loader" aria-hidden="true"></span>
@@ -133,11 +178,11 @@
           </form>
         </section>
 
-        <section class="wizard-screen" data-screen="1"
+        <section class="wizard-screen" data-screen="2"
                  aria-labelledby="preprocessing-title" hidden>
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 2 DARI 5</span>
+              <span class="eyebrow">TAHAP 3 DARI 6</span>
               <h2 id="preprocessing-title">Standardisasi dan Encoding</h2>
               <p>Fitur numerik disetarakan skalanya, sedangkan departemen diubah menjadi fitur biner.</p>
             </div>
@@ -163,22 +208,40 @@
             </article>
           </div>
           <div class="screen-actions">
-            <button class="secondary-button" type="button" data-go-step="0">KEMBALI</button>
-            <button class="primary-button" type="button" data-go-step="2">LANJUT KE K-MEANS</button>
+            <button class="secondary-button" type="button" data-go-step="1">KEMBALI</button>
+            <button class="primary-button" type="button" data-go-step="3">LANJUT KE K-MEANS</button>
           </div>
         </section>
 
-        <section class="wizard-screen" data-screen="2"
+        <section class="wizard-screen" data-screen="3"
                  aria-labelledby="kmeans-title" hidden>
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 3 DARI 5</span>
+              <span class="eyebrow">TAHAP 4 DARI 6</span>
               <h2 id="kmeans-title">Penentuan Cluster dengan K-Means</h2>
               <p>Vektor baru dibandingkan dengan tiga centroid. Jarak Euclidean terkecil menentukan cluster.</p>
             </div>
             <code>KMeans(n_clusters=3)</code>
           </div>
-          <div class="model-explanation">
+          <div class="plot-report new-point-report">
+            <div class="plot-toolbar">
+              <div>
+                <strong>Posisi data baru pada plot dataset lama</strong>
+                <span id="new-point-summary"></span>
+              </div>
+              <button class="secondary-button compact-button" type="button"
+                      data-download-plot="prediction">
+                UNDUH PNG LAPORAN
+              </button>
+            </div>
+            <div class="plot-frame">
+              <canvas id="prediction-cluster-plot" width="1200" height="460"
+                      role="img"
+                      aria-label="Plot PCA dengan data karyawan baru"></canvas>
+            </div>
+            <div class="plot-legend" id="prediction-legend"></div>
+          </div>
+          <div class="model-explanation compact-explanation">
             <div class="formula-panel">
               <span class="card-index">RUMUS JARAK</span>
               <div class="large-formula">d(x, c) = √Σ(xᵢ - cᵢ)²</div>
@@ -191,16 +254,16 @@
             </div>
           </div>
           <div class="screen-actions">
-            <button class="secondary-button" type="button" data-go-step="1">KEMBALI</button>
-            <button class="primary-button" type="button" data-go-step="3">LANJUT KE SVM</button>
+            <button class="secondary-button" type="button" data-go-step="2">KEMBALI</button>
+            <button class="primary-button" type="button" data-go-step="4">LANJUT KE SVM</button>
           </div>
         </section>
 
-        <section class="wizard-screen" data-screen="3"
+        <section class="wizard-screen" data-screen="4"
                  aria-labelledby="svm-title" hidden>
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 4 DARI 5</span>
+              <span class="eyebrow">TAHAP 5 DARI 6</span>
               <h2 id="svm-title">Klasifikasi dengan SVM</h2>
               <p>SVM mempelajari label hasil K-Means dan menghasilkan confidence untuk setiap kategori profil.</p>
             </div>
@@ -219,16 +282,16 @@
             </div>
           </div>
           <div class="screen-actions">
-            <button class="secondary-button" type="button" data-go-step="2">KEMBALI</button>
-            <button class="primary-button" type="button" data-go-step="4">LIHAT RINGKASAN</button>
+            <button class="secondary-button" type="button" data-go-step="3">KEMBALI</button>
+            <button class="primary-button" type="button" data-go-step="5">LIHAT RINGKASAN</button>
           </div>
         </section>
 
-        <section class="wizard-screen" data-screen="4" id="result-section"
+        <section class="wizard-screen" data-screen="5" id="result-section"
                  aria-labelledby="result-title" hidden aria-live="polite">
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 5 DARI 5</span>
+              <span class="eyebrow">TAHAP 6 DARI 6</span>
               <h2 id="result-title">Ringkasan Hasil Segmentasi</h2>
               <p>Seluruh tahap pipeline telah selesai dijalankan.</p>
             </div>
@@ -266,7 +329,7 @@
           </div>
           <p class="disclaimer" id="result-disclaimer"></p>
           <div class="screen-actions">
-            <button class="secondary-button" type="button" data-go-step="3">KEMBALI</button>
+            <button class="secondary-button" type="button" data-go-step="4">KEMBALI</button>
             <button class="primary-button" id="restart-button" type="button">ULANGI SIMULASI</button>
           </div>
         </section>

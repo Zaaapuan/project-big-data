@@ -15,6 +15,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 from sklearn.metrics import silhouette_score
 
 from employee_app.core.config import N_CLUSTERS, RANDOM_STATE
@@ -155,4 +156,74 @@ def build_kmeans_trace(
         "distances": ranked_distances,
         "nearest_cluster_id": selected_cluster,
         "nearest_category": cluster_labels[selected_cluster],
+    }
+
+
+def build_cluster_projection(
+    transformed_data: np.ndarray,
+    model: KMeans,
+    cluster_ids: np.ndarray,
+    cluster_labels: dict[int, str],
+) -> tuple[PCA, dict[str, Any]]:
+    """Project training points and centroids to two dimensions for reporting.
+
+    PCA is only a visualization layer. K-Means training and prediction still
+    use the complete transformed feature space.
+    """
+
+    pca = PCA(n_components=2)
+    projected_points = pca.fit_transform(transformed_data)
+    projected_centroids = pca.transform(model.cluster_centers_)
+
+    points = [
+        {
+            "x": round(float(coordinates[0]), 4),
+            "y": round(float(coordinates[1]), 4),
+            "cluster_id": int(cluster_id),
+        }
+        for coordinates, cluster_id in zip(
+            projected_points,
+            cluster_ids,
+            strict=True,
+        )
+    ]
+    centroids = [
+        {
+            "x": round(float(coordinates[0]), 4),
+            "y": round(float(coordinates[1]), 4),
+            "cluster_id": int(cluster_id),
+            "category": cluster_labels[int(cluster_id)],
+        }
+        for cluster_id, coordinates in enumerate(projected_centroids)
+    ]
+
+    return pca, {
+        "method": "PCA 2D projection of preprocessed features",
+        "axis_labels": ["Principal Component 1", "Principal Component 2"],
+        "explained_variance_ratio": [
+            round(float(value), 4) for value in pca.explained_variance_ratio_
+        ],
+        "points": points,
+        "centroids": centroids,
+        "note": (
+            "PCA digunakan untuk visualisasi laporan. Keputusan K-Means tetap "
+            "dihitung pada seluruh fitur hasil preprocessing."
+        ),
+    }
+
+
+def project_new_point(
+    pca: PCA,
+    transformed: np.ndarray,
+    selected_cluster: int,
+    cluster_labels: dict[int, str],
+) -> dict[str, float | int | str]:
+    """Place a new employee vector on the same PCA plane as training data."""
+
+    coordinates = pca.transform(transformed)[0]
+    return {
+        "x": round(float(coordinates[0]), 4),
+        "y": round(float(coordinates[1]), 4),
+        "cluster_id": selected_cluster,
+        "category": cluster_labels[selected_cluster],
     }

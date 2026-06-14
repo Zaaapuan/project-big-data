@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from sklearn.calibration import CalibratedClassifierCV
 from sklearn.cluster import KMeans
 from sklearn.compose import ColumnTransformer
+from sklearn.decomposition import PCA
 
 
 @dataclass(frozen=True)
@@ -14,6 +15,8 @@ class ModelBundle:
     preprocessor: ColumnTransformer
     kmeans: KMeans
     svm: CalibratedClassifierCV
+    pca: PCA
+    cluster_plot: dict[str, object]
     cluster_labels: dict[int, str]
     cluster_profiles: dict[int, dict[str, float | int | str]]
     metrics: dict[str, float]

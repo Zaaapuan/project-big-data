@@ -17,6 +17,7 @@ from employee_app.core.data_loader import dataset_hash, load_dataset
 from employee_app.core.model_bundle import ModelBundle
 from employee_app.core.preprocessing import build_preprocessor
 from employee_app.models.kmeans import (
+    build_cluster_projection,
     label_clusters,
     summarize_clusters,
     train_kmeans,
@@ -42,6 +43,12 @@ def train_model(
         cluster_ids,
         cluster_labels,
     )
+    pca, cluster_plot = build_cluster_projection(
+        transformed,
+        kmeans,
+        cluster_ids,
+        cluster_labels,
+    )
 
     metrics = evaluate_svm(transformed, cluster_ids)
     metrics["kmeans_silhouette"] = silhouette
@@ -51,6 +58,8 @@ def train_model(
         preprocessor=preprocessor,
         kmeans=kmeans,
         svm=svm,
+        pca=pca,
+        cluster_plot=cluster_plot,
         cluster_labels=cluster_labels,
         cluster_profiles=cluster_profiles,
         metrics=metrics,

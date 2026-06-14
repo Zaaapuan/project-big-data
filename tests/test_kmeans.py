@@ -4,9 +4,11 @@ from employee_app.core.config import DATASET_PATH, MODEL_FEATURES
 from employee_app.core.data_loader import load_dataset
 from employee_app.core.preprocessing import build_preprocessor
 from employee_app.models.kmeans import (
+    build_cluster_projection,
     build_kmeans_trace,
     label_clusters,
     predict_cluster,
+    project_new_point,
     summarize_clusters,
     train_kmeans,
 )
@@ -37,6 +39,13 @@ def test_kmeans_helpers_cover_training_prediction_and_trace():
     sample = transformed[:1]
     selected_cluster = predict_cluster(model, sample)
     trace = build_kmeans_trace(model, sample, selected_cluster, labels)
+    pca, plot = build_cluster_projection(
+        transformed,
+        model,
+        cluster_ids,
+        labels,
+    )
+    new_point = project_new_point(pca, sample, selected_cluster, labels)
 
     assert len(np.unique(cluster_ids)) == 3
     assert silhouette > 0
@@ -48,3 +57,7 @@ def test_kmeans_helpers_cover_training_prediction_and_trace():
     assert len(profiles) == 3
     assert len(trace["distances"]) == 3
     assert trace["nearest_cluster_id"] == selected_cluster
+    assert len(plot["points"]) == 1470
+    assert len(plot["centroids"]) == 3
+    assert len(plot["explained_variance_ratio"]) == 2
+    assert new_point["cluster_id"] == selected_cluster

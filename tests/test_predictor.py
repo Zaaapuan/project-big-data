@@ -26,11 +26,19 @@ def test_prediction_contains_complete_result(predictor):
     assert result["description"]
     assert result["color"] in {"violet", "pink", "ink"}
     assert result["input_summary"]["education_label"] == "Master"
-    assert set(result["process"]) == {"preprocessing", "kmeans", "svm"}
+    assert set(result["process"]) == {
+        "preprocessing",
+        "kmeans",
+        "cluster_plot",
+        "svm",
+    }
     assert len(result["process"]["preprocessing"]["numeric_scaling"]) == 3
     assert len(result["process"]["preprocessing"]["transformed_vector"]) == 6
     assert len(result["process"]["kmeans"]["distances"]) == 3
     assert len(result["process"]["svm"]["probabilities"]) == 3
+    assert result["process"]["cluster_plot"]["new_point"]["cluster_id"] == (
+        result["kmeans"]["cluster_id"]
+    )
     assert "bukan penilaian performa kerja aktual" in result["disclaimer"]
 
 

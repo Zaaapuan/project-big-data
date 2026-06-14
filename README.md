@@ -2,9 +2,10 @@
 
 Aplikasi desktop lokal untuk melakukan segmentasi profil karyawan menggunakan
 K-Means dan SVM. Antarmuka disusun sebagai wizard akademik untuk tugas big
-data: input, preprocessing, K-Means, SVM, dan ringkasan ditampilkan sebagai
-lima tahap presentasi. UI dibuat dengan HTML, CSS, dan JavaScript, disajikan
-oleh Flask, lalu dibuka sebagai window native melalui pywebview.
+data: dataset lama, input, preprocessing, K-Means, SVM, dan ringkasan
+ditampilkan sebagai enam tahap presentasi. UI dibuat dengan HTML, CSS, dan
+JavaScript, disajikan oleh Flask, lalu dibuka sebagai window native melalui
+pywebview.
 
 Saat menjalankan:
 
@@ -284,6 +285,22 @@ Balanced accuracy dihitung menggunakan stratified 5-fold cross-validation.
 Pada dataset yang disertakan, konsistensi SVM terhadap K-Means sekitar 98%.
 Angka ini tidak mengukur kebenaran performa kerja.
 
+### 7. Visualisasi PCA 2D
+
+Setelah K-Means dilatih, seluruh vektor enam dimensi diproyeksikan menjadi dua
+dimensi menggunakan `PCA(n_components=2)`. Centroid K-Means diproyeksikan
+dengan objek PCA yang sama.
+
+Plot ini digunakan untuk:
+
+- menunjukkan pola dataset lama dan posisi setiap centroid;
+- menempatkan data karyawan baru pada bidang visual yang sama;
+- menghasilkan PNG sebelum dan sesudah prediksi untuk laporan proyek.
+
+PCA hanya digunakan sebagai visualisasi. Penentuan cluster tetap memakai
+jarak Euclidean pada seluruh fitur hasil preprocessing, bukan hanya koordinat
+PC1 dan PC2.
+
 ## Panduan Membaca Kode
 
 Kode dipisahkan berdasarkan tahapan pipeline agar alurnya mudah dipelajari
@@ -308,10 +325,11 @@ Urutan yang disarankan ketika mempelajari kode:
 2. Baca `employee_app/core/data_loader.py` dan `preprocessing.py`.
 3. Pelajari `employee_app/models/kmeans.py` dari training hingga trace.
 4. Pelajari `employee_app/models/svm.py` dari evaluasi hingga probabilitas.
-5. Ikuti orkestrasi `train_model()` di `employee_app/core/training.py`.
-6. Ikuti `predict()` di `employee_app/core/predictor.py`.
-7. Lihat endpoint `POST /api/predict` di `employee_app/api.py`.
-8. Lihat `employee_app/ui/static/js/app.js` untuk navigasi presentasi.
+5. Lihat `build_cluster_projection()` untuk memahami proyeksi PCA laporan.
+6. Ikuti orkestrasi `train_model()` di `employee_app/core/training.py`.
+7. Ikuti `predict()` di `employee_app/core/predictor.py`.
+8. Lihat endpoint `POST /api/predict` di `employee_app/api.py`.
+9. Lihat `employee_app/ui/static/js/app.js` untuk plot dan navigasi presentasi.
 
 Alur training dapat dibaca sebagai pseudocode berikut:
 
@@ -394,21 +412,22 @@ Menutup window akan menghentikan aplikasi.
 
 ## Menggunakan Aplikasi
 
-1. Isi umur 18-60 tahun.
-2. Isi total pengalaman 0-40 tahun.
-3. Pilih tingkat pendidikan.
-4. Pilih departemen.
+1. Pelajari plot dataset lama dan posisi tiga centroid.
+2. Gunakan **Unduh PNG Laporan** jika plot awal akan dimasukkan ke laporan.
+3. Klik **Lanjut ke Input Data**.
+4. Isi umur, pengalaman, pendidikan, dan departemen.
 5. Klik **Mulai Analisis**.
 6. Pelajari hasil standardisasi dan one-hot encoding, lalu klik
    **Lanjut ke K-Means**.
-7. Bandingkan jarak data ke setiap centroid, lalu klik **Lanjut ke SVM**.
-8. Pelajari confidence setiap kategori SVM, lalu klik **Lihat Ringkasan**.
+7. Amati marker data baru pada plot, bandingkan jarak centroid, dan unduh PNG
+   hasil prediksi jika diperlukan.
+8. Klik **Lanjut ke SVM**, pelajari confidence, lalu buka Ringkasan.
 
-Antarmuka menggunakan konsep wizard lima tahap: Input Data, Preprocessing,
-K-Means, SVM, dan Ringkasan. Perpindahan tahap dilakukan secara manual agar
-alur pengolahan data dapat dijelaskan saat presentasi. Hasil akhir baru
-ditampilkan pada tahap Ringkasan. Badge `Model Sepakat` berarti SVM dan
-K-Means memberikan kategori yang sama.
+Antarmuka menggunakan wizard enam tahap: Dataset Lama, Input Data,
+Preprocessing, K-Means, SVM, dan Ringkasan. Perpindahan dilakukan manual agar
+alur pengolahan dapat dijelaskan saat presentasi. Hasil akhir baru ditampilkan
+pada Ringkasan. Badge `Model Sepakat` berarti SVM dan K-Means memberikan
+kategori yang sama.
 
 ## REST API Internal
 
@@ -426,7 +445,7 @@ Contoh:
 ```json
 {
   "model_loaded": true,
-  "pipeline_version": "2.0.0",
+  "pipeline_version": "2.1.0",
   "status": "ready"
 }
 ```
@@ -473,7 +492,8 @@ Respons ringkas:
 ```
 
 Objek `process` berisi nilai perhitungan yang ditampilkan pada setiap tahap
-wizard. Respons juga berisi deskripsi, ringkasan input, dan disclaimer.
+wizard, termasuk koordinat PCA data baru pada `cluster_plot.new_point`.
+Respons juga berisi deskripsi, ringkasan input, dan disclaimer.
 
 ## Validasi Input
 
@@ -554,6 +574,7 @@ Test suite mencakup:
 - schema dan hash dataset;
 - kode pendidikan dan departemen;
 - kelengkapan label cluster;
+- proyeksi PCA dataset, centroid, dan data baru;
 - determinisme training;
 - ambang konsistensi SVM minimal 90%;
 - penggunaan dan invalidasi cache;

@@ -16,7 +16,11 @@ from employee_app.core.preprocessing import (
     build_preprocessing_trace,
     employee_frame,
 )
-from employee_app.models.kmeans import build_kmeans_trace, predict_cluster
+from employee_app.models.kmeans import (
+    build_kmeans_trace,
+    predict_cluster,
+    project_new_point,
+)
 from employee_app.models.svm import build_svm_trace, predict_with_probabilities
 
 
@@ -179,6 +183,15 @@ class EmployeeProfilePredictor:
                     kmeans_cluster,
                     self.bundle.cluster_labels,
                 ),
+                "cluster_plot": {
+                    **self.bundle.cluster_plot,
+                    "new_point": project_new_point(
+                        self.bundle.pca,
+                        transformed,
+                        kmeans_cluster,
+                        self.bundle.cluster_labels,
+                    ),
+                },
                 "svm": build_svm_trace(
                     class_probabilities,
                     svm_cluster,
@@ -200,6 +213,7 @@ class EmployeeProfilePredictor:
             ],
             "categories": list(CATEGORY_METADATA),
             "cluster_profiles": list(self.bundle.cluster_profiles.values()),
+            "cluster_plot": self.bundle.cluster_plot,
             "metrics": {
                 key: round(value, 4)
                 for key, value in self.bundle.metrics.items()
