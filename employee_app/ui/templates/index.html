@@ -11,22 +11,22 @@
   <div class="app-shell">
     <header class="app-header">
       <div>
-        <p class="course-label">TUGAS BIG DATA</p>
+        <p class="course-label">BIG DATA - KELOMPOK 2</p>
         <h1>Simulasi Clustering Profil Karyawan</h1>
-        <p>Ikuti setiap tahap pengolahan data hingga hasil segmentasi.</p>
+        <p>Berbasis K-Means dan SVM.</p>
       </div>
       <div class="model-status" id="model-status" role="status" aria-live="polite">
         <span class="status-dot"></span>
-        <span id="status-text">Memuat model</span>
+        <span id="status-text">Loading dataset</span>
       </div>
     </header>
 
     <main class="wizard-card">
-      <nav class="stepper" aria-label="Tahapan analisis">
+      <nav class="stepper" aria-label="Analysis flow">
         <button class="stepper-item active" type="button" data-step-target="0"
                 aria-current="step">
           <span>1</span>
-          <strong>Dataset Lama</strong>
+          <strong>Training Dataset</strong>
         </button>
         <button class="stepper-item" type="button" data-step-target="1">
           <span>2</span>
@@ -46,7 +46,7 @@
         </button>
         <button class="stepper-item" type="button" data-step-target="5" disabled>
           <span>6</span>
-          <strong>Ringkasan</strong>
+          <strong>Summary</strong>
         </button>
       </nav>
 
@@ -55,9 +55,9 @@
                  aria-labelledby="dataset-title">
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 1 DARI 6</span>
-              <h2 id="dataset-title">Hasil Clustering Dataset Lama</h2>
-              <p>Visualisasi awal memperlihatkan 1.470 data training dan posisi centroid sebelum data karyawan baru dimasukkan.</p>
+              <span class="eyebrow">STEP 1 OF 6</span>
+              <h2 id="dataset-title">Training Dataset</h2>
+              <p>Lihat pola 1.470 data training dan posisi centroid sebelum mencoba data baru.</p>
             </div>
             <code>PCA(n_components=2)</code>
           </div>
@@ -65,13 +65,9 @@
           <div class="plot-report">
             <div class="plot-toolbar">
               <div>
-                <strong>Proyeksi PCA 2D hasil K-Means</strong>
-                <span id="variance-summary">Memuat data visualisasi...</span>
+                <strong>K-Means projection</strong>
+                <span id="variance-summary">Loading visualization...</span>
               </div>
-              <button class="secondary-button compact-button" type="button"
-                      data-download-plot="baseline">
-                UNDUH PNG LAPORAN
-              </button>
             </div>
             <div class="plot-frame" data-zoom-canvas="baseline-cluster-plot"
                  tabindex="0" role="button"
@@ -81,12 +77,11 @@
                       aria-label="Plot PCA dataset training dan centroid K-Means"></canvas>
             </div>
             <div class="plot-legend" id="baseline-legend"></div>
-            <p class="plot-note" id="plot-note"></p>
           </div>
 
           <div class="screen-actions align-right">
             <button class="primary-button" type="button" data-go-step="1">
-              LANJUT KE INPUT DATA
+              INPUT DATA
             </button>
           </div>
         </section>
@@ -95,15 +90,14 @@
                  aria-labelledby="input-title">
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 2 DARI 6</span>
-              <h2 id="input-title">Masukkan Data Karyawan</h2>
-              <p>Data ini akan diproses oleh pipeline yang telah dilatih dari 1.470 baris dataset IBM HR.</p>
+              <span class="eyebrow">STEP 2 OF 6</span>
+              <h2 id="input-title">Input Data Karyawan</h2>
+              <p>Masukkan satu profil untuk mengikuti proses clustering dari awal.</p>
             </div>
-            <code>POST /api/predict</code>
           </div>
 
           <div class="error-banner" id="error-banner" role="alert" hidden>
-            <strong>Input belum valid.</strong>
+            <strong>Cek kembali input.</strong>
             <span id="error-message"></span>
           </div>
 
@@ -117,7 +111,7 @@
                          aria-describedby="age-hint age-error" required>
                   <span>tahun</span>
                 </div>
-                <small id="age-hint">Rentang dataset: 18-60</small>
+                <small id="age-hint">Rentang umur: 18-60</small>
                 <small class="field-error" id="age-error"></small>
               </div>
 
@@ -131,7 +125,7 @@
                          required>
                   <span>tahun</span>
                 </div>
-                <small id="experience-hint">Tidak melebihi umur dikurangi 14</small>
+                <small id="experience-hint">Maksimal umur dikurangi 14 tahun</small>
                 <small class="field-error" id="years-experience-error"></small>
               </div>
 
@@ -148,7 +142,6 @@
                     <option value="5">5 - Doctor</option>
                   </select>
                 </div>
-                <small>Kode 1-5 sesuai dataset IBM HR</small>
                 <small class="field-error" id="education-level-error"></small>
               </div>
 
@@ -163,17 +156,16 @@
                     <option value="Sales">Sales</option>
                   </select>
                 </div>
-                <small>Akan diubah menggunakan one-hot encoding</small>
                 <small class="field-error" id="department-error"></small>
               </div>
             </div>
 
             <div class="screen-actions">
               <button class="secondary-button" type="button" data-go-step="0">
-                KEMBALI
+                BACK
               </button>
               <button class="primary-button" id="predict-button" type="submit">
-                <span class="button-label">MULAI ANALISIS</span>
+                <span class="button-label">START ANALYSIS</span>
                 <span class="button-loader" aria-hidden="true"></span>
               </button>
             </div>
@@ -184,34 +176,33 @@
                  aria-labelledby="preprocessing-title" hidden>
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 3 DARI 6</span>
-              <h2 id="preprocessing-title">Standardisasi dan Encoding</h2>
-              <p>Fitur numerik disetarakan skalanya, sedangkan departemen diubah menjadi fitur biner.</p>
+              <span class="eyebrow">STEP 3 OF 6</span>
+              <h2 id="preprocessing-title">Scaling & Encoding</h2>
+              <p>Numerical features di-scale, lalu Department diubah menjadi binary features.</p>
             </div>
-            <code>StandardScaler + OneHotEncoder</code>
           </div>
           <div class="explanation-grid">
             <article class="concept-card">
               <span class="card-index">01</span>
-              <h3>Standardisasi numerik</h3>
-              <p>Setiap nilai dikurangi rata-rata data latih, lalu dibagi simpangan baku.</p>
+              <h3>StandardScaler</h3>
+              <p>Nilai dikurangi mean data training, lalu dibagi standard deviation.</p>
               <div class="formula-box">z = (x - mean) / std</div>
               <div id="scaling-output" class="calculation-list"></div>
             </article>
             <article class="concept-card">
               <span class="card-index">02</span>
-              <h3>Encoding departemen</h3>
-              <p>Satu kategori aktif diberi nilai 1, sedangkan kategori lain diberi nilai 0.</p>
+              <h3>One-hot encoding</h3>
+              <p>Department yang dipilih bernilai 1, kategori lain bernilai 0.</p>
               <div id="encoding-output" class="encoding-output"></div>
               <div class="vector-box">
-                <span>Vektor hasil transformasi</span>
+                <span>Transformed vector</span>
                 <code id="transformed-vector"></code>
               </div>
             </article>
           </div>
           <div class="screen-actions">
-            <button class="secondary-button" type="button" data-go-step="1">KEMBALI</button>
-            <button class="primary-button" type="button" data-go-step="3">LANJUT KE K-MEANS</button>
+            <button class="secondary-button" type="button" data-go-step="1">BACK</button>
+            <button class="primary-button" type="button" data-go-step="3">CONTINUE TO K-MEANS</button>
           </div>
         </section>
 
@@ -219,22 +210,17 @@
                  aria-labelledby="kmeans-title" hidden>
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 4 DARI 6</span>
-              <h2 id="kmeans-title">Penentuan Cluster dengan K-Means</h2>
-              <p>Vektor baru dibandingkan dengan tiga centroid. Jarak Euclidean terkecil menentukan cluster.</p>
+              <span class="eyebrow">STEP 4 OF 6</span>
+              <h2 id="kmeans-title">K-Means Clustering</h2>
+              <p>Data baru dibandingkan dengan tiga centroid. Jarak terdekat menentukan cluster.</p>
             </div>
-            <code>KMeans(n_clusters=3)</code>
           </div>
           <div class="plot-report new-point-report">
             <div class="plot-toolbar">
               <div>
-                <strong>Posisi data baru pada plot dataset lama</strong>
+                <strong>New data position</strong>
                 <span id="new-point-summary"></span>
               </div>
-              <button class="secondary-button compact-button" type="button"
-                      data-download-plot="prediction">
-                UNDUH PNG LAPORAN
-              </button>
             </div>
             <div class="plot-frame" data-zoom-canvas="prediction-cluster-plot"
                  tabindex="0" role="button"
@@ -246,18 +232,18 @@
             <div class="plot-legend" id="prediction-legend"></div>
           </div>
           <p class="distance-note">
-            Semakin kecil jarak, semakin mirip data karyawan dengan karakteristik centroid tersebut.
+            Semakin kecil jaraknya, semakin dekat karakteristik data dengan centroid tersebut.
           </p>
           <div class="kmeans-distance-panel">
             <div>
-              <h3>Perbandingan jarak centroid</h3>
+              <h3>Centroid distance</h3>
               <div id="kmeans-output" class="model-bars"></div>
               <p class="selection-note" id="kmeans-selection"></p>
             </div>
           </div>
           <div class="screen-actions">
-            <button class="secondary-button" type="button" data-go-step="2">KEMBALI</button>
-            <button class="primary-button" type="button" data-go-step="4">LANJUT KE SVM</button>
+            <button class="secondary-button" type="button" data-go-step="2">BACK</button>
+            <button class="primary-button" type="button" data-go-step="4">CONTINUE TO SVM</button>
           </div>
         </section>
 
@@ -265,22 +251,17 @@
                  aria-labelledby="svm-title" hidden>
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 5 DARI 6</span>
-              <h2 id="svm-title">Klasifikasi dengan SVM</h2>
-              <p>SVM mempelajari label hasil K-Means dan menghasilkan confidence untuk setiap kategori profil.</p>
+              <span class="eyebrow">STEP 5 OF 6</span>
+              <h2 id="svm-title">RBF SVM Classification</h2>
+              <p>SVM mempelajari cluster K-Means dan memberi confidence untuk tiap kategori.</p>
             </div>
-            <code>Calibrated RBF SVM</code>
           </div>
           <div class="plot-report svm-plot-report">
             <div class="plot-toolbar">
               <div>
-                <strong>Batas keputusan SVC dengan RBF kernel</strong>
+                <strong>RBF decision boundary</strong>
                 <span id="svm-plot-summary"></span>
               </div>
-              <button class="secondary-button compact-button" type="button"
-                      data-download-plot="svm">
-                UNDUH PNG LAPORAN
-              </button>
             </div>
             <div class="plot-frame" data-zoom-canvas="svm-decision-plot"
                  tabindex="0" role="button"
@@ -293,19 +274,18 @@
             <p class="plot-note" id="svm-plot-note"></p>
           </div>
           <p class="distance-note">
-            Kernel RBF membentuk batas non-linear. Area berwarna menunjukkan
-            kategori yang dipilih model visual pada setiap koordinat PCA.
+            Warna background menunjukkan area keputusan pada PCA plot.
           </p>
           <div class="svm-confidence-panel">
             <div>
-              <h3>Confidence kategori</h3>
+              <h3>Category confidence</h3>
               <div id="svm-output" class="model-bars"></div>
               <p class="selection-note" id="svm-selection"></p>
             </div>
           </div>
           <div class="screen-actions">
-            <button class="secondary-button" type="button" data-go-step="3">KEMBALI</button>
-            <button class="primary-button" type="button" data-go-step="5">LIHAT RINGKASAN</button>
+            <button class="secondary-button" type="button" data-go-step="3">BACK</button>
+            <button class="primary-button" type="button" data-go-step="5">VIEW SUMMARY</button>
           </div>
         </section>
 
@@ -313,15 +293,15 @@
                  aria-labelledby="result-title" hidden aria-live="polite">
           <div class="screen-heading">
             <div>
-              <span class="eyebrow">TAHAP 6 DARI 6</span>
-              <h2 id="result-title">Ringkasan Hasil Segmentasi</h2>
-              <p>Seluruh tahap pipeline telah selesai dijalankan.</p>
+              <span class="eyebrow">STEP 6 OF 6</span>
+              <h2 id="result-title">Prediction Summary</h2>
+              <p>Pipeline selesai. Berikut hasil dari K-Means dan SVM.</p>
             </div>
             <span class="agreement-badge" id="agreement-badge"></span>
           </div>
           <div class="result-grid">
             <section class="result-highlight">
-              <span>KATEGORI PROFIL</span>
+              <span>PROFILE CATEGORY</span>
               <h3 id="result-category"></h3>
               <p id="result-description"></p>
             </section>
@@ -335,31 +315,29 @@
                    aria-valuemax="100" id="confidence-track">
                 <span id="confidence-bar"></span>
               </div>
-              <small>Keyakinan terhadap segmentasi profil, bukan performa kerja.</small>
+              <small>Confidence untuk kategori hasil clustering.</small>
             </section>
             <section class="result-detail">
-              <h3>Perbandingan model</h3>
+              <h3>Model comparison</h3>
               <dl>
                 <div><dt>K-Means</dt><dd id="kmeans-result"></dd></div>
                 <div><dt>SVM</dt><dd id="svm-result"></dd></div>
               </dl>
             </section>
             <section class="result-detail">
-              <h3>Data karyawan</h3>
+              <h3>Input summary</h3>
               <div id="input-summary" class="summary-list"></div>
             </section>
           </div>
-          <p class="disclaimer" id="result-disclaimer"></p>
           <div class="screen-actions">
-            <button class="secondary-button" type="button" data-go-step="4">KEMBALI</button>
-            <button class="primary-button" id="restart-button" type="button">ULANGI SIMULASI</button>
+            <button class="secondary-button" type="button" data-go-step="4">BACK</button>
+            <button class="primary-button" id="restart-button" type="button">NEW SIMULATION</button>
           </div>
         </section>
       </div>
     </main>
 
     <footer>
-      <span>IBM HR Employee Attrition · 1.470 baris · 4 fitur</span>
       <span>Pipeline v<strong id="pipeline-version">--</strong></span>
     </footer>
   </div>
@@ -368,8 +346,8 @@
        role="dialog" aria-modal="true" aria-labelledby="lightbox-title">
     <div class="lightbox-header">
       <div>
-        <span class="eyebrow">VISUALISASI PLOT</span>
-        <h2 id="lightbox-title">Tampilan Layar Penuh</h2>
+        <span class="eyebrow">PLOT VIEWER</span>
+        <h2 id="lightbox-title">Fullscreen Plot</h2>
       </div>
       <div class="lightbox-controls">
         <button type="button" id="zoom-out" aria-label="Perkecil gambar">−</button>
@@ -381,7 +359,7 @@
     <div class="lightbox-viewport" id="lightbox-viewport">
       <img id="lightbox-image" alt="Plot clustering dalam layar penuh">
     </div>
-    <p>Gunakan roda mouse atau tombol +/− untuk zoom. Tekan Esc untuk menutup.</p>
+    <p>Scroll atau gunakan tombol +/− untuk zoom. Tekan Esc untuk menutup.</p>
   </div>
 
   <script src="{{ url_for('static', filename='js/app.js') }}"></script>

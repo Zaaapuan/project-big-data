@@ -26,7 +26,7 @@ def test_dashboard_and_health_endpoints(predictor):
     assert b'id="svm-decision-plot"' in dashboard.data
     assert b'id="plot-lightbox"' in dashboard.data
     assert b"RUMUS JARAK" not in dashboard.data
-    assert b"Semakin kecil jarak" in dashboard.data
+    assert b"Semakin kecil jaraknya" in dashboard.data
     assert b"/static/css/styles.css" in dashboard.data
     font = client.get("/static/fonts/Rubik-Variable.ttf")
     stylesheet = client.get("/static/css/styles.css")
@@ -66,7 +66,7 @@ def test_predict_endpoint_returns_model_results(predictor):
     assert "cluster_plot" in body["process"]
     assert body["process"]["cluster_plot"]["new_point"]["category"]
     assert body["process"]["svm_plot"]["new_point"]["category"]
-    assert body["disclaimer"]
+    assert "disclaimer" not in body
 
 
 def test_predict_endpoint_returns_structured_validation_errors(predictor):

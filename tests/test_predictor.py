@@ -43,7 +43,7 @@ def test_prediction_contains_complete_result(predictor):
     assert result["process"]["svm_plot"]["new_point"]["cluster_id"] == (
         result["svm"]["cluster_id"]
     )
-    assert "bukan penilaian performa kerja aktual" in result["disclaimer"]
+    assert "disclaimer" not in result
 
 
 @pytest.mark.parametrize(

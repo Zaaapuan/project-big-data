@@ -52,16 +52,16 @@ async function loadModelInfo() {
   try {
     const response = await fetch("/api/model-info");
     if (!response.ok) {
-      throw new Error("Informasi model tidak tersedia.");
+      throw new Error("Model info gagal dimuat.");
     }
     const info = await response.json();
     modelInfo = info;
     document.querySelector("#pipeline-version").textContent = info.pipeline_version;
     renderBaselinePlot(info.cluster_plot);
     stepperItems[1].disabled = false;
-    setModelStatus("ready", "MODEL READY");
+    setModelStatus("ready", "DATASET LOADED");
   } catch (error) {
-    setModelStatus("error", "MODEL ERROR");
+    setModelStatus("error", "DATASET ERROR");
     showBanner(error.message);
   }
 }
@@ -171,7 +171,7 @@ function drawClusterPlot(canvas, plotData, title) {
   context.fillStyle = "#686174";
   context.font = "13px Rubik, Arial, sans-serif";
   context.fillText(
-    "PCA 2D dari Age, TotalWorkingYears, Education, dan Department",
+    "PCA 2D · Age · Experience · Education · Department",
     width / 2,
     52,
   );
@@ -285,7 +285,7 @@ function drawSvmDecisionPlot(canvas, plotData) {
   context.fillStyle = "#1f1633";
   context.font = "600 23px Rubik, Arial, sans-serif";
   context.textAlign = "center";
-  context.fillText("SVC dengan RBF Kernel pada Proyeksi PCA 2D", width / 2, 31);
+  context.fillText("SVC dengan RBF Kernel", width / 2, 31);
   context.fillStyle = "#686174";
   context.font = "13px Rubik, Arial, sans-serif";
   context.fillText(
@@ -413,23 +413,22 @@ function renderBaselinePlot(plotData) {
   const explained = plotData.explained_variance_ratio
     .reduce((total, value) => total + value, 0);
   document.querySelector("#variance-summary").textContent =
-    `PC1 + PC2 menjelaskan ${formatPercent(explained)} variasi data`;
-  document.querySelector("#plot-note").textContent = plotData.note;
+    `PC1 + PC2 cover ${formatPercent(explained)} of the data variance`;
   drawClusterPlot(
     document.querySelector("#baseline-cluster-plot"),
     plotData,
-    "Clustering Dataset Lama dan Posisi Centroid",
+    "K-Means Training Data & Centroids",
   );
   renderPlotLegend("baseline-legend", plotData);
 }
 
 function renderPredictionPlot(plotData) {
   document.querySelector("#new-point-summary").textContent =
-    `Data baru diproyeksikan ke ${plotData.new_point.category}`;
+    `New data berada di area ${plotData.new_point.category}`;
   drawClusterPlot(
     document.querySelector("#prediction-cluster-plot"),
     plotData,
-    "Posisi Data Baru pada Hasil Clustering",
+    "New Data Position in K-Means Clusters",
   );
   renderPlotLegend("prediction-legend", plotData, true);
 }
@@ -437,8 +436,8 @@ function renderPredictionPlot(plotData) {
 function renderSvmPlot(plotData) {
   const newPoint = plotData.new_point;
   const matchMessage = newPoint.visual_matches_main_model
-    ? `Visual PCA dan model utama sama-sama memilih ${newPoint.category}`
-    : `Visual PCA memilih ${newPoint.visual_category}; model utama memilih ${newPoint.category}`;
+    ? `PCA view dan main model sama-sama memilih ${newPoint.category}`
+    : `PCA view: ${newPoint.visual_category} · Main model: ${newPoint.category}`;
   document.querySelector("#svm-plot-summary").textContent = matchMessage;
   document.querySelector("#svm-plot-note").textContent = plotData.note;
   drawSvmDecisionPlot(
@@ -556,7 +555,7 @@ function setLoading(isLoading) {
   predictButton.disabled = isLoading;
   predictButton.classList.toggle("loading", isLoading);
   predictButton.querySelector(".button-label").textContent =
-    isLoading ? "MEMPROSES DATA" : "MULAI ANALISIS";
+    isLoading ? "PROCESSING..." : "START ANALYSIS";
 }
 
 function renderPreprocessing(preprocessing) {
@@ -625,7 +624,7 @@ function renderResult(result) {
     kmeans.nearest_cluster_id,
   );
   document.querySelector("#kmeans-selection").innerHTML =
-    `Jarak terkecil memilih cluster <strong>${escapeHtml(kmeans.nearest_category)}</strong>.`;
+    `Nearest centroid: <strong>${escapeHtml(kmeans.nearest_category)}</strong>.`;
 
   const svm = result.process.svm;
   document.querySelector("#svm-output").innerHTML = renderModelBars(
@@ -634,16 +633,14 @@ function renderResult(result) {
     svm.selected_cluster_id,
   );
   document.querySelector("#svm-selection").innerHTML =
-    `Confidence tertinggi memilih <strong>${escapeHtml(svm.selected_category)}</strong>.`;
+    `Top confidence: <strong>${escapeHtml(svm.selected_category)}</strong>.`;
 
   document.querySelector("#result-category").textContent = result.category;
   document.querySelector("#result-description").textContent = result.description;
   document.querySelector("#svm-result").textContent = result.svm.category;
   document.querySelector("#kmeans-result").textContent = result.kmeans.category;
-  document.querySelector("#result-disclaimer").textContent = result.disclaimer;
-
   const agreement = document.querySelector("#agreement-badge");
-  agreement.textContent = result.models_agree ? "MODEL SEPAKAT" : "MODEL BERBEDA";
+  agreement.textContent = result.models_agree ? "MODELS AGREE" : "MODELS DIFFER";
   agreement.classList.toggle("disagree", !result.models_agree);
 
   const confidence = Math.round(result.svm.confidence * 100);
@@ -656,10 +653,10 @@ function renderResult(result) {
 
   const summary = result.input_summary;
   document.querySelector("#input-summary").innerHTML = [
-    summaryItem("Umur", `${summary.age} tahun`),
-    summaryItem("Pengalaman", `${summary.years_experience} tahun`),
-    summaryItem("Pendidikan", summary.education_label),
-    summaryItem("Departemen", summary.department),
+    summaryItem("Age", `${summary.age} tahun`),
+    summaryItem("Experience", `${summary.years_experience} tahun`),
+    summaryItem("Education", summary.education_label),
+    summaryItem("Department", summary.department),
   ].join("");
 }
 
@@ -669,7 +666,7 @@ form.addEventListener("submit", async (event) => {
 
   if (!form.checkValidity()) {
     form.reportValidity();
-    showBanner("Lengkapi seluruh kolom dengan nilai yang valid.");
+    showBanner("Lengkapi semua field sebelum melanjutkan.");
     return;
   }
 
@@ -683,7 +680,7 @@ form.addEventListener("submit", async (event) => {
     const result = await response.json();
 
     if (!response.ok) {
-      showBanner(result.message || "Prediksi tidak dapat diproses.");
+      showBanner(result.message || "Prediction gagal diproses.");
       if (result.fields) {
         showFieldErrors(result.fields);
       }
@@ -694,7 +691,7 @@ form.addEventListener("submit", async (event) => {
     renderResult(result);
     showStep(2);
   } catch (_error) {
-    showBanner("Tidak dapat terhubung ke model lokal. Jalankan ulang aplikasi.");
+    showBanner("Model lokal tidak merespons. Coba restart aplikasi.");
   } finally {
     setLoading(false);
   }

@@ -205,10 +205,6 @@ def build_cluster_projection(
         ],
         "points": points,
         "centroids": centroids,
-        "note": (
-            "PCA digunakan untuk visualisasi laporan. Keputusan K-Means tetap "
-            "dihitung pada seluruh fitur hasil preprocessing."
-        ),
     }
 
 

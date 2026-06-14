@@ -37,28 +37,22 @@ CATEGORY_METADATA = {
     "Emerging Talent": {
         "color": "violet",
         "description": (
-            "Profil talenta awal karier dengan usia relatif muda, pendidikan "
-            "menengah, dan pengalaman kerja yang masih berkembang."
+            "Kelompok early-career dengan usia lebih muda dan pengalaman "
+            "kerja yang masih berkembang."
         ),
     },
     "Academic Achiever": {
         "color": "pink",
         "description": (
-            "Profil karyawan relatif muda dengan tingkat pendidikan yang lebih "
-            "tinggi dibanding kelompok awal karier lainnya."
+            "Kelompok dengan latar pendidikan lebih tinggi dibanding profil "
+            "early-career lainnya."
         ),
     },
     "Seasoned Veteran": {
         "color": "ink",
         "description": (
-            "Profil karyawan senior dengan usia dan total pengalaman kerja "
-            "yang paling tinggi dalam segmentasi dataset."
+            "Kelompok senior dengan rata-rata usia dan pengalaman kerja "
+            "tertinggi di dataset."
         ),
     },
 }
-
-DISCLAIMER = (
-    "Kategori ini merupakan segmentasi profil berdasarkan usia, pendidikan, "
-    "pengalaman, dan departemen. Hasil bukan penilaian performa kerja aktual "
-    "dan tidak boleh menjadi satu-satunya dasar keputusan HR."
-)

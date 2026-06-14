@@ -721,15 +721,6 @@ h1, h2, h3, p { margin-top: 0; }
 .result-detail dl > div:last-child, .summary-list > div:last-child { border-bottom: 0; }
 .result-detail dt, .summary-list span { color: var(--muted); }
 .result-detail dd { margin: 0; font-weight: 600; text-align: right; }
-.disclaimer {
-  margin: 16px 0 0;
-  padding: 12px 14px;
-  color: var(--muted);
-  background: #f0eff2;
-  border-left: 3px solid var(--line-strong);
-  font-size: 12px;
-}
-
 .plot-lightbox {
   position: fixed;
   inset: 0;

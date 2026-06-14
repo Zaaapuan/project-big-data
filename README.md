@@ -60,11 +60,7 @@ Hasil yang ditampilkan meliputi:
 - confidence SVM;
 - status apakah kedua model memberikan kategori yang sama;
 - ringkasan data masukan;
-- penjelasan kategori dan disclaimer.
-
-Kategori bukan penilaian performa kerja objektif. Aplikasi tidak boleh
-digunakan sebagai satu-satunya dasar rekrutmen, promosi, kompensasi, atau
-keputusan HR lainnya.
+- penjelasan singkat untuk kategori hasil.
 
 ## Kategori Profil
 
@@ -473,7 +469,7 @@ Contoh:
 ### `GET /api/model-info`
 
 Mengembalikan jumlah data, daftar fitur, kategori, metrik, versi pipeline,
-status cache, dan disclaimer.
+status cache, dan data visualisasi.
 
 ### `POST /api/predict`
 
@@ -513,7 +509,7 @@ Respons ringkas:
 
 Objek `process` berisi nilai perhitungan yang ditampilkan pada setiap tahap
 wizard, termasuk koordinat PCA data baru pada `cluster_plot.new_point`.
-Respons juga berisi deskripsi, ringkasan input, dan disclaimer.
+Respons juga berisi deskripsi dan ringkasan input.
 
 ## Validasi Input
 

@@ -8,7 +8,6 @@ from typing import Any
 from employee_app.core.config import (
     CATEGORY_METADATA,
     DEPARTMENTS,
-    DISCLAIMER,
     EDUCATION_LEVELS,
 )
 from employee_app.core.model_bundle import ModelBundle
@@ -213,7 +212,6 @@ class EmployeeProfilePredictor:
                     ),
                 },
             },
-            "disclaimer": DISCLAIMER,
         }
 
     def model_info(self) -> dict[str, Any]:
@@ -240,10 +238,9 @@ class EmployeeProfilePredictor:
             "loaded_from_cache": self.loaded_from_cache,
             "pipeline_version": self.bundle.pipeline_version,
             "workflow": [
-                "Validasi input",
-                "StandardScaler dan OneHotEncoder",
-                "Perhitungan jarak centroid K-Means",
-                "Klasifikasi dan probabilitas SVM",
+                "Input data",
+                "StandardScaler + OneHotEncoder",
+                "K-Means centroid distance",
+                "RBF SVM classification",
             ],
-            "disclaimer": DISCLAIMER,
         }

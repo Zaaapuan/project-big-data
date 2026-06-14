@@ -134,9 +134,8 @@ def build_svm_decision_projection(
             for cluster_id in sorted(cluster_labels)
         ],
         "note": (
-            "Batas keputusan ini dilatih ulang pada proyeksi PCA 2D untuk "
-            "visualisasi. Prediksi final tetap memakai calibrated RBF SVM "
-            "pada seluruh fitur hasil preprocessing."
+            "2D boundary untuk melihat pola kelas. Main prediction memakai "
+            "calibrated RBF SVM."
         ),
     }
 
