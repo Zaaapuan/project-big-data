@@ -11,7 +11,7 @@ ARTIFACT_DIR = ROOT_DIR / "artifacts"
 MODEL_PATH = ARTIFACT_DIR / "employee_profile_model.joblib"
 
 # Incrementing this value invalidates artifacts created by an older pipeline.
-PIPELINE_VERSION = "2.1.0"
+PIPELINE_VERSION = "2.2.0"
 RANDOM_STATE = 42
 N_CLUSTERS = 3
 

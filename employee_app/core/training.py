@@ -22,7 +22,11 @@ from employee_app.models.kmeans import (
     summarize_clusters,
     train_kmeans,
 )
-from employee_app.models.svm import evaluate_svm, train_svm
+from employee_app.models.svm import (
+    build_svm_decision_projection,
+    evaluate_svm,
+    train_svm,
+)
 
 
 def train_model(
@@ -53,13 +57,21 @@ def train_model(
     metrics = evaluate_svm(transformed, cluster_ids)
     metrics["kmeans_silhouette"] = silhouette
     svm = train_svm(transformed, cluster_ids)
+    projected_data = pca.transform(transformed)
+    svm_visualizer, svm_plot = build_svm_decision_projection(
+        projected_data,
+        cluster_ids,
+        cluster_labels,
+    )
 
     bundle = ModelBundle(
         preprocessor=preprocessor,
         kmeans=kmeans,
         svm=svm,
+        svm_visualizer=svm_visualizer,
         pca=pca,
         cluster_plot=cluster_plot,
+        svm_plot=svm_plot,
         cluster_labels=cluster_labels,
         cluster_profiles=cluster_profiles,
         metrics=metrics,

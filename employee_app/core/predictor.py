@@ -21,7 +21,11 @@ from employee_app.models.kmeans import (
     predict_cluster,
     project_new_point,
 )
-from employee_app.models.svm import build_svm_trace, predict_with_probabilities
+from employee_app.models.svm import (
+    build_svm_trace,
+    predict_with_probabilities,
+    project_svm_new_point,
+)
 
 
 class InputValidationError(ValueError):
@@ -144,6 +148,7 @@ class EmployeeProfilePredictor:
         svm_category = self.bundle.cluster_labels[svm_cluster]
         kmeans_category = self.bundle.cluster_labels[kmeans_cluster]
         metadata = CATEGORY_METADATA[svm_category]
+        projected_point = self.bundle.pca.transform(transformed)
 
         return {
             "category": svm_category,
@@ -197,6 +202,16 @@ class EmployeeProfilePredictor:
                     svm_cluster,
                     self.bundle.cluster_labels,
                 ),
+                "svm_plot": {
+                    **self.bundle.svm_plot,
+                    "points": self.bundle.cluster_plot["points"],
+                    "new_point": project_svm_new_point(
+                        self.bundle.svm_visualizer,
+                        projected_point,
+                        svm_cluster,
+                        self.bundle.cluster_labels,
+                    ),
+                },
             },
             "disclaimer": DISCLAIMER,
         }
@@ -214,6 +229,10 @@ class EmployeeProfilePredictor:
             "categories": list(CATEGORY_METADATA),
             "cluster_profiles": list(self.bundle.cluster_profiles.values()),
             "cluster_plot": self.bundle.cluster_plot,
+            "svm_plot": {
+                **self.bundle.svm_plot,
+                "points": self.bundle.cluster_plot["points"],
+            },
             "metrics": {
                 key: round(value, 4)
                 for key, value in self.bundle.metrics.items()

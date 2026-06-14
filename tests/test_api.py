@@ -23,6 +23,7 @@ def test_dashboard_and_health_endpoints(predictor):
     assert dashboard.data.count(b'class="stepper-item') == 6
     assert b'id="baseline-cluster-plot"' in dashboard.data
     assert b'id="prediction-cluster-plot"' in dashboard.data
+    assert b'id="svm-decision-plot"' in dashboard.data
     assert b'id="plot-lightbox"' in dashboard.data
     assert b"RUMUS JARAK" not in dashboard.data
     assert b"Semakin kecil jarak" in dashboard.data
@@ -37,6 +38,8 @@ def test_dashboard_and_health_endpoints(predictor):
     assert len(model_info.get_json()["categories"]) == 3
     assert len(model_info.get_json()["cluster_plot"]["points"]) == 1470
     assert len(model_info.get_json()["cluster_plot"]["centroids"]) == 3
+    assert model_info.get_json()["svm_plot"]["kernel"] == "rbf"
+    assert len(model_info.get_json()["svm_plot"]["grid"]["cluster_ids"]) == 6000
 
 
 def test_predict_endpoint_returns_model_results(predictor):
@@ -59,8 +62,10 @@ def test_predict_endpoint_returns_model_results(predictor):
     assert "preprocessing" in body["process"]
     assert "kmeans" in body["process"]
     assert "svm" in body["process"]
+    assert "svm_plot" in body["process"]
     assert "cluster_plot" in body["process"]
     assert body["process"]["cluster_plot"]["new_point"]["category"]
+    assert body["process"]["svm_plot"]["new_point"]["category"]
     assert body["disclaimer"]
 
 

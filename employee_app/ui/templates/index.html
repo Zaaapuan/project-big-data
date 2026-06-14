@@ -271,12 +271,32 @@
             </div>
             <code>Calibrated RBF SVM</code>
           </div>
-          <div class="model-explanation svm-layout">
-            <div class="formula-panel">
-              <span class="card-index">FUNGSI KERNEL</span>
-              <div class="large-formula">K(x, x') = exp(-γ||x-x'||²)</div>
-              <p>Kernel RBF membantu SVM membentuk batas klasifikasi non-linear antar-cluster.</p>
+          <div class="plot-report svm-plot-report">
+            <div class="plot-toolbar">
+              <div>
+                <strong>Batas keputusan SVC dengan RBF kernel</strong>
+                <span id="svm-plot-summary"></span>
+              </div>
+              <button class="secondary-button compact-button" type="button"
+                      data-download-plot="svm">
+                UNDUH PNG LAPORAN
+              </button>
             </div>
+            <div class="plot-frame" data-zoom-canvas="svm-decision-plot"
+                 tabindex="0" role="button"
+                 aria-label="Buka plot batas keputusan SVM dalam layar penuh">
+              <canvas id="svm-decision-plot" width="1200" height="500"
+                      role="img"
+                      aria-label="Plot batas keputusan SVC dengan RBF kernel"></canvas>
+            </div>
+            <div class="plot-legend" id="svm-legend"></div>
+            <p class="plot-note" id="svm-plot-note"></p>
+          </div>
+          <p class="distance-note">
+            Kernel RBF membentuk batas non-linear. Area berwarna menunjukkan
+            kategori yang dipilih model visual pada setiap koordinat PCA.
+          </p>
+          <div class="svm-confidence-panel">
             <div>
               <h3>Confidence kategori</h3>
               <div id="svm-output" class="model-bars"></div>

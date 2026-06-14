@@ -301,6 +301,24 @@ PCA hanya digunakan sebagai visualisasi. Penentuan cluster tetap memakai
 jarak Euclidean pada seluruh fitur hasil preprocessing, bukan hanya koordinat
 PC1 dan PC2.
 
+### 8. Plot Batas Keputusan SVM RBF
+
+Tahap SVM menampilkan satu plot `SVC(kernel="rbf")` pada koordinat PCA 2D.
+Area berwarna merupakan wilayah keputusan tiap kategori, lingkaran kosong
+menunjukkan support vectors, dan marker lime menunjukkan data baru.
+
+Model visual ini sengaja dipisahkan dari model prediksi utama:
+
+- model visual dilatih pada dua koordinat PCA agar batas keputusan dapat
+  digambar;
+- model utama menggunakan enam fitur hasil preprocessing;
+- confidence berasal dari `CalibratedClassifierCV` dengan base estimator
+  `SVC(kernel="rbf")`.
+
+Karena PCA mereduksi dimensi, hasil visual 2D dapat berbeda dari model utama.
+Jika terjadi, aplikasi menampilkan kedua kategori secara jujur dan hasil akhir
+tetap mengikuti model utama.
+
 ## Panduan Membaca Kode
 
 Kode dipisahkan berdasarkan tahapan pipeline agar alurnya mudah dipelajari
@@ -326,10 +344,11 @@ Urutan yang disarankan ketika mempelajari kode:
 3. Pelajari `employee_app/models/kmeans.py` dari training hingga trace.
 4. Pelajari `employee_app/models/svm.py` dari evaluasi hingga probabilitas.
 5. Lihat `build_cluster_projection()` untuk memahami proyeksi PCA laporan.
-6. Ikuti orkestrasi `train_model()` di `employee_app/core/training.py`.
-7. Ikuti `predict()` di `employee_app/core/predictor.py`.
-8. Lihat endpoint `POST /api/predict` di `employee_app/api.py`.
-9. Lihat `employee_app/ui/static/js/app.js` untuk plot dan navigasi presentasi.
+6. Lihat `build_svm_decision_projection()` untuk batas keputusan RBF 2D.
+7. Ikuti orkestrasi `train_model()` di `employee_app/core/training.py`.
+8. Ikuti `predict()` di `employee_app/core/predictor.py`.
+9. Lihat endpoint `POST /api/predict` di `employee_app/api.py`.
+10. Lihat `employee_app/ui/static/js/app.js` untuk plot dan navigasi.
 
 Alur training dapat dibaca sebagai pseudocode berikut:
 
@@ -421,7 +440,8 @@ Menutup window akan menghentikan aplikasi.
    **Lanjut ke K-Means**.
 7. Amati marker data baru pada plot, bandingkan jarak centroid, dan unduh PNG
    hasil prediksi jika diperlukan.
-8. Klik **Lanjut ke SVM**, pelajari confidence, lalu buka Ringkasan.
+8. Klik **Lanjut ke SVM**, pelajari batas keputusan RBF, support vectors, dan
+   confidence, lalu buka Ringkasan.
 
 Antarmuka menggunakan wizard enam tahap: Dataset Lama, Input Data,
 Preprocessing, K-Means, SVM, dan Ringkasan. Perpindahan dilakukan manual agar
@@ -445,7 +465,7 @@ Contoh:
 ```json
 {
   "model_loaded": true,
-  "pipeline_version": "2.1.0",
+  "pipeline_version": "2.2.0",
   "status": "ready"
 }
 ```
@@ -575,6 +595,7 @@ Test suite mencakup:
 - kode pendidikan dan departemen;
 - kelengkapan label cluster;
 - proyeksi PCA dataset, centroid, dan data baru;
+- mesh keputusan RBF, support vectors, dan marker data baru;
 - determinisme training;
 - ambang konsistensi SVM minimal 90%;
 - penggunaan dan invalidasi cache;

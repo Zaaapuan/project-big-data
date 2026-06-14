@@ -258,6 +258,143 @@ function drawClusterPlot(canvas, plotData, title) {
   }
 }
 
+function drawSvmDecisionPlot(canvas, plotData) {
+  const context = canvas.getContext("2d");
+  const width = canvas.width;
+  const height = canvas.height;
+  const margin = {top: 72, right: 210, bottom: 62, left: 72};
+  const plotWidth = width - margin.left - margin.right;
+  const plotHeight = height - margin.top - margin.bottom;
+  const xValues = plotData.grid.x_values;
+  const yValues = plotData.grid.y_values;
+  const minX = xValues[0];
+  const maxX = xValues[xValues.length - 1];
+  const minY = yValues[0];
+  const maxY = yValues[yValues.length - 1];
+  const xScale = (value) => margin.left
+    + ((value - minX) / (maxX - minX)) * plotWidth;
+  const yScale = (value) => margin.top + plotHeight
+    - ((value - minY) / (maxY - minY)) * plotHeight;
+  const categoryByCluster = Object.fromEntries(
+    plotData.categories.map((item) => [item.cluster_id, item.category]),
+  );
+
+  context.clearRect(0, 0, width, height);
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, width, height);
+  context.fillStyle = "#1f1633";
+  context.font = "600 23px Rubik, Arial, sans-serif";
+  context.textAlign = "center";
+  context.fillText("SVC dengan RBF Kernel pada Proyeksi PCA 2D", width / 2, 31);
+  context.fillStyle = "#686174";
+  context.font = "13px Rubik, Arial, sans-serif";
+  context.fillText(
+    `C=${plotData.c.toFixed(1)} · gamma=${plotData.gamma}`,
+    width / 2,
+    52,
+  );
+
+  const cellWidth = plotWidth / (xValues.length - 1);
+  const cellHeight = plotHeight / (yValues.length - 1);
+  plotData.grid.cluster_ids.forEach((clusterId, index) => {
+    const xIndex = index % xValues.length;
+    const yIndex = Math.floor(index / xValues.length);
+    const category = categoryByCluster[clusterId];
+    context.globalAlpha = 0.2;
+    context.fillStyle = clusterColors[category];
+    context.fillRect(
+      xScale(xValues[xIndex]) - cellWidth / 2,
+      yScale(yValues[yIndex]) - cellHeight / 2,
+      cellWidth + 1,
+      cellHeight + 1,
+    );
+  });
+  context.globalAlpha = 1;
+
+  context.strokeStyle = "#d9d6df";
+  context.lineWidth = 1;
+  context.font = "11px Monaco, monospace";
+  for (let tick = 0; tick <= 5; tick += 1) {
+    const x = margin.left + (plotWidth / 5) * tick;
+    const y = margin.top + (plotHeight / 5) * tick;
+    context.beginPath();
+    context.moveTo(x, margin.top);
+    context.lineTo(x, margin.top + plotHeight);
+    context.moveTo(margin.left, y);
+    context.lineTo(margin.left + plotWidth, y);
+    context.stroke();
+    context.fillStyle = "#8d8796";
+    context.textAlign = "center";
+    context.fillText(
+      (minX + ((maxX - minX) / 5) * tick).toFixed(1),
+      x,
+      margin.top + plotHeight + 20,
+    );
+    context.textAlign = "right";
+    context.fillText(
+      (maxY - ((maxY - minY) / 5) * tick).toFixed(1),
+      margin.left - 10,
+      y + 4,
+    );
+  }
+
+  plotData.points.forEach((point) => {
+    context.globalAlpha = 0.68;
+    context.fillStyle = clusterColors[categoryByCluster[point.cluster_id]];
+    context.beginPath();
+    context.arc(xScale(point.x), yScale(point.y), 3, 0, Math.PI * 2);
+    context.fill();
+  });
+  context.globalAlpha = 1;
+
+  plotData.support_vectors.forEach((point) => {
+    context.strokeStyle = "#150f23";
+    context.lineWidth = 1;
+    context.beginPath();
+    context.arc(xScale(point.x), yScale(point.y), 5, 0, Math.PI * 2);
+    context.stroke();
+  });
+  drawNewPoint(
+    context,
+    xScale(plotData.new_point.x),
+    yScale(plotData.new_point.y),
+  );
+
+  context.fillStyle = "#686174";
+  context.font = "13px Rubik, Arial, sans-serif";
+  context.textAlign = "center";
+  context.fillText(plotData.axis_labels[0], margin.left + plotWidth / 2, height - 13);
+  context.save();
+  context.translate(17, margin.top + plotHeight / 2);
+  context.rotate(-Math.PI / 2);
+  context.fillText(plotData.axis_labels[1], 0, 0);
+  context.restore();
+
+  const legendX = margin.left + plotWidth + 25;
+  let legendY = margin.top + 10;
+  context.textAlign = "left";
+  context.font = "12px Rubik, Arial, sans-serif";
+  plotData.categories.forEach((item) => {
+    context.fillStyle = clusterColors[item.category];
+    context.beginPath();
+    context.arc(legendX + 6, legendY, 5, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = "#1f1633";
+    context.fillText(item.category, legendX + 18, legendY + 4);
+    legendY += 25;
+  });
+  context.strokeStyle = "#150f23";
+  context.beginPath();
+  context.arc(legendX + 6, legendY, 6, 0, Math.PI * 2);
+  context.stroke();
+  context.fillStyle = "#1f1633";
+  context.fillText("Support vector", legendX + 18, legendY + 4);
+  legendY += 29;
+  drawNewPoint(context, legendX + 6, legendY);
+  context.fillStyle = "#1f1633";
+  context.fillText("Data baru", legendX + 25, legendY + 4);
+}
+
 function renderPlotLegend(targetId, plotData, includeNewPoint = false) {
   const items = plotData.centroids.map((centroid) => `
     <span>
@@ -297,13 +434,47 @@ function renderPredictionPlot(plotData) {
   renderPlotLegend("prediction-legend", plotData, true);
 }
 
+function renderSvmPlot(plotData) {
+  const newPoint = plotData.new_point;
+  const matchMessage = newPoint.visual_matches_main_model
+    ? `Visual PCA dan model utama sama-sama memilih ${newPoint.category}`
+    : `Visual PCA memilih ${newPoint.visual_category}; model utama memilih ${newPoint.category}`;
+  document.querySelector("#svm-plot-summary").textContent = matchMessage;
+  document.querySelector("#svm-plot-note").textContent = plotData.note;
+  drawSvmDecisionPlot(
+    document.querySelector("#svm-decision-plot"),
+    plotData,
+  );
+
+  const legendItems = plotData.categories.map((item) => `
+    <span>
+      <i style="background:${clusterColors[item.category]}"></i>
+      ${escapeHtml(item.category)}
+    </span>
+  `);
+  legendItems.push(
+    "<span><i class=\"support-vector-key\"></i> Support vector</span>",
+    "<span><i class=\"new-point-key\"></i> Data baru</span>",
+  );
+  document.querySelector("#svm-legend").innerHTML = legendItems.join("");
+}
+
 function downloadPlot(plotType) {
-  const canvasId = plotType === "baseline"
-    ? "baseline-cluster-plot"
-    : "prediction-cluster-plot";
-  const filename = plotType === "baseline"
-    ? "plot-dataset-lama-dan-centroid.png"
-    : "plot-data-baru-dan-cluster.png";
+  const plotFiles = {
+    baseline: [
+      "baseline-cluster-plot",
+      "plot-dataset-lama-dan-centroid.png",
+    ],
+    prediction: [
+      "prediction-cluster-plot",
+      "plot-data-baru-dan-cluster.png",
+    ],
+    svm: [
+      "svm-decision-plot",
+      "plot-batas-keputusan-svm-rbf.png",
+    ],
+  };
+  const [canvasId, filename] = plotFiles[plotType];
   const link = document.createElement("a");
   link.download = filename;
   link.href = document.querySelector(`#${canvasId}`).toDataURL("image/png");
@@ -445,6 +616,7 @@ function summaryItem(label, value) {
 function renderResult(result) {
   renderPreprocessing(result.process.preprocessing);
   renderPredictionPlot(result.process.cluster_plot);
+  renderSvmPlot(result.process.svm_plot);
 
   const kmeans = result.process.kmeans;
   document.querySelector("#kmeans-output").innerHTML = renderModelBars(

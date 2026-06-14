@@ -19,6 +19,7 @@ def test_training_is_deterministic(tmp_path):
     assert first.cluster_profiles == second.cluster_profiles
     assert np.allclose(first.pca.components_, second.pca.components_)
     assert first.cluster_plot == second.cluster_plot
+    assert first.svm_plot == second.svm_plot
 
 
 def test_cache_is_reused_and_invalidated_by_dataset_change(tmp_path, monkeypatch):

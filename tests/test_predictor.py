@@ -31,6 +31,7 @@ def test_prediction_contains_complete_result(predictor):
         "kmeans",
         "cluster_plot",
         "svm",
+        "svm_plot",
     }
     assert len(result["process"]["preprocessing"]["numeric_scaling"]) == 3
     assert len(result["process"]["preprocessing"]["transformed_vector"]) == 6
@@ -38,6 +39,9 @@ def test_prediction_contains_complete_result(predictor):
     assert len(result["process"]["svm"]["probabilities"]) == 3
     assert result["process"]["cluster_plot"]["new_point"]["cluster_id"] == (
         result["kmeans"]["cluster_id"]
+    )
+    assert result["process"]["svm_plot"]["new_point"]["cluster_id"] == (
+        result["svm"]["cluster_id"]
     )
     assert "bukan penilaian performa kerja aktual" in result["disclaimer"]
 

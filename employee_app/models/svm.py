@@ -75,6 +75,92 @@ def train_svm(
     return model
 
 
+def build_svm_decision_projection(
+    projected_data: np.ndarray,
+    cluster_ids: np.ndarray,
+    cluster_labels: dict[int, str],
+) -> tuple[SVC, dict[str, Any]]:
+    """Train an RBF SVC on PCA coordinates for a 2D decision-boundary plot.
+
+    This classifier is a reporting aid only. The production prediction still
+    uses the calibrated model trained on the complete transformed feature set.
+    """
+
+    projected_data = np.asarray(projected_data)
+    cluster_ids = np.asarray(cluster_ids)
+    visualizer = create_svm_model()
+    visualizer.fit(projected_data, cluster_ids)
+
+    x_padding = float(np.ptp(projected_data[:, 0]) * 0.08) or 1.0
+    y_padding = float(np.ptp(projected_data[:, 1]) * 0.10) or 1.0
+    x_values = np.linspace(
+        float(projected_data[:, 0].min()) - x_padding,
+        float(projected_data[:, 0].max()) + x_padding,
+        100,
+    )
+    y_values = np.linspace(
+        float(projected_data[:, 1].min()) - y_padding,
+        float(projected_data[:, 1].max()) + y_padding,
+        60,
+    )
+    mesh_x, mesh_y = np.meshgrid(x_values, y_values)
+    mesh_points = np.column_stack((mesh_x.ravel(), mesh_y.ravel()))
+    mesh_predictions = visualizer.predict(mesh_points)
+
+    support_vectors = [
+        {
+            "x": round(float(point[0]), 4),
+            "y": round(float(point[1]), 4),
+        }
+        for point in visualizer.support_vectors_
+    ]
+    return visualizer, {
+        "method": "SVC with RBF kernel on PCA 2D coordinates",
+        "kernel": "rbf",
+        "c": float(visualizer.C),
+        "gamma": round(float(visualizer._gamma), 6),
+        "axis_labels": ["Principal Component 1", "Principal Component 2"],
+        "grid": {
+            "x_values": [round(float(value), 4) for value in x_values],
+            "y_values": [round(float(value), 4) for value in y_values],
+            "cluster_ids": [int(value) for value in mesh_predictions],
+        },
+        "support_vectors": support_vectors,
+        "categories": [
+            {
+                "cluster_id": int(cluster_id),
+                "category": cluster_labels[int(cluster_id)],
+            }
+            for cluster_id in sorted(cluster_labels)
+        ],
+        "note": (
+            "Batas keputusan ini dilatih ulang pada proyeksi PCA 2D untuk "
+            "visualisasi. Prediksi final tetap memakai calibrated RBF SVM "
+            "pada seluruh fitur hasil preprocessing."
+        ),
+    }
+
+
+def project_svm_new_point(
+    visualizer: SVC,
+    projected_point: np.ndarray,
+    selected_cluster: int,
+    cluster_labels: dict[int, str],
+) -> dict[str, float | int | str | bool]:
+    """Compare the 2D visual boundary with the complete SVM prediction."""
+
+    visual_cluster = int(visualizer.predict(projected_point)[0])
+    return {
+        "x": round(float(projected_point[0, 0]), 4),
+        "y": round(float(projected_point[0, 1]), 4),
+        "cluster_id": selected_cluster,
+        "category": cluster_labels[selected_cluster],
+        "visual_cluster_id": visual_cluster,
+        "visual_category": cluster_labels[visual_cluster],
+        "visual_matches_main_model": visual_cluster == selected_cluster,
+    }
+
+
 def predict_with_probabilities(
     model: CalibratedClassifierCV,
     transformed: np.ndarray,
