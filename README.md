@@ -1,10 +1,10 @@
-# Dashboard Clustering Profil Karyawan
+# Simulasi Clustering Profil Karyawan
 
 Aplikasi desktop lokal untuk melakukan segmentasi profil karyawan menggunakan
-K-Means dan SVM. Antarmuka disusun sebagai dashboard akademik untuk tugas big
-data: informasi dataset, konfigurasi algoritma, proses inferensi, dan hasil
-ditampilkan dalam satu halaman. UI dibuat dengan HTML, CSS, dan JavaScript,
-disajikan oleh Flask, lalu dibuka sebagai window native melalui pywebview.
+K-Means dan SVM. Antarmuka disusun sebagai wizard akademik untuk tugas big
+data: input, preprocessing, K-Means, SVM, dan ringkasan ditampilkan sebagai
+lima tahap presentasi. UI dibuat dengan HTML, CSS, dan JavaScript, disajikan
+oleh Flask, lalu dibuka sebagai window native melalui pywebview.
 
 Saat menjalankan:
 
@@ -12,7 +12,7 @@ Saat menjalankan:
 python main.py
 ```
 
-aplikasi langsung membuka window dashboard. Tidak ada browser eksternal,
+aplikasi langsung membuka window simulasi. Tidak ada browser eksternal,
 layanan cloud, atau input interaktif di terminal.
 
 ## Daftar Isi
@@ -25,7 +25,7 @@ layanan cloud, atau input interaktif di terminal.
 - [Panduan Membaca Kode](#panduan-membaca-kode)
 - [Instalasi](#instalasi)
 - [Menjalankan Aplikasi](#menjalankan-aplikasi)
-- [Menggunakan Dashboard](#menggunakan-dashboard)
+- [Menggunakan Aplikasi](#menggunakan-aplikasi)
 - [REST API Internal](#rest-api-internal)
 - [Validasi Input](#validasi-input)
 - [Cache Model](#cache-model)
@@ -96,23 +96,32 @@ project-big-data/
 |-- data/
 |   `-- employee_attrition.csv
 |-- employee_app/
-|   |-- config.py
-|   |-- data_loader.py
-|   |-- model_trainer.py
-|   |-- predictor.py
+|   |-- core/
+|   |   |-- config.py
+|   |   |-- data_loader.py
+|   |   |-- preprocessing.py
+|   |   |-- model_bundle.py
+|   |   |-- training.py
+|   |   `-- predictor.py
+|   |-- models/
+|   |   |-- kmeans.py
+|   |   `-- svm.py
+|   |-- ui/
+|   |   |-- templates/index.html
+|   |   `-- static/
+|   |       |-- css/styles.css
+|   |       |-- js/app.js
+|   |       `-- fonts/Rubik-Variable.ttf
 |   |-- api.py
 |   `-- desktop.py
-|-- templates/
-|   `-- index.html
-|-- static/
-|   |-- css/styles.css
-|   `-- js/app.js
 |-- artifacts/
 |   `-- employee_profile_model.joblib  # Dibuat otomatis
 `-- tests/
     |-- conftest.py
     |-- test_data_loader.py
-    |-- test_model_trainer.py
+    |-- test_training.py
+    |-- test_kmeans.py
+    |-- test_svm.py
     |-- test_predictor.py
     `-- test_api.py
 ```
@@ -122,21 +131,25 @@ project-big-data/
 | Komponen | Tanggung jawab |
 |---|---|
 | `main.py` | Entry point aplikasi desktop. |
-| `config.py` | Path, fitur, kategori, dan konfigurasi pipeline. |
-| `data_loader.py` | Membaca, memvalidasi, dan menghitung hash dataset. |
-| `model_trainer.py` | Preprocessing, K-Means, labeling, SVM, metrik, dan cache. |
-| `predictor.py` | Validasi request dan inferensi model. |
-| `api.py` | Dashboard dan REST API Flask internal. |
+| `core/config.py` | Path, fitur, kategori, dan konfigurasi pipeline. |
+| `core/data_loader.py` | Membaca, memvalidasi, dan menghitung hash dataset. |
+| `core/preprocessing.py` | StandardScaler, OneHotEncoder, dan trace transformasi. |
+| `core/model_bundle.py` | Struktur artefak model yang disimpan Joblib. |
+| `core/training.py` | Mengatur training dan cache tanpa logika algoritma. |
+| `core/predictor.py` | Validasi request dan koordinasi inferensi. |
+| `models/kmeans.py` | Training, labeling, evaluasi, prediksi, dan trace K-Means. |
+| `models/svm.py` | Training, cross-validation, prediksi, dan trace SVM. |
+| `api.py` | Wizard dan REST API Flask internal. |
 | `desktop.py` | Membuat window native pywebview. |
-| `templates/` dan `static/` | UI offline dashboard. |
+| `ui/` | Template dan aset offline untuk wizard presentasi. |
 
 Flask diberikan langsung sebagai aplikasi WSGI kepada pywebview. pywebview
 menjalankan server lokal internal dan menampilkan hasilnya menggunakan web
 renderer bawaan sistem operasi.
 
-Dashboard menggunakan font Rubik yang disimpan lokal di
-`static/fonts/Rubik-Variable.ttf`. Dengan demikian, tampilan tetap konsisten
-dan tidak membutuhkan Google Fonts atau koneksi internet saat aplikasi dibuka.
+UI menggunakan font Rubik yang disimpan lokal di
+`employee_app/ui/static/fonts/Rubik-Variable.ttf`. Dengan demikian, tampilan
+tetap konsisten dan tidak membutuhkan Google Fonts atau koneksi internet.
 
 ## Dataset
 
@@ -277,27 +290,28 @@ Kode dipisahkan berdasarkan tahapan pipeline agar alurnya mudah dipelajari
 untuk tugas big data:
 
 ```text
-data_loader.py
-    |
-    v
-model_trainer.py
-    |
-    v
-predictor.py
-    |
-    v
-api.py -> app.js -> dashboard
+core/data_loader.py -> core/preprocessing.py
+                              |
+                              v
+                models/kmeans.py -> models/svm.py
+                              |
+                              v
+              core/training.py -> core/predictor.py
+                              |
+                              v
+             api.py -> ui/static/js/app.js -> wizard
 ```
 
 Urutan yang disarankan ketika mempelajari kode:
 
-1. Baca `employee_app/config.py` untuk melihat fitur, kategori, dan konstanta.
-2. Baca `employee_app/data_loader.py` untuk memahami validasi dataset.
-3. Ikuti fungsi `train_model()` di `employee_app/model_trainer.py`.
-4. Ikuti fungsi `predict()` di `employee_app/predictor.py`.
-5. Lihat endpoint `POST /api/predict` di `employee_app/api.py`.
-6. Lihat `playEducationalTrace()` di `static/js/app.js` untuk memahami cara
-   hasil perhitungan ditampilkan bertahap.
+1. Baca `employee_app/core/config.py` untuk melihat fitur dan konstanta.
+2. Baca `employee_app/core/data_loader.py` dan `preprocessing.py`.
+3. Pelajari `employee_app/models/kmeans.py` dari training hingga trace.
+4. Pelajari `employee_app/models/svm.py` dari evaluasi hingga probabilitas.
+5. Ikuti orkestrasi `train_model()` di `employee_app/core/training.py`.
+6. Ikuti `predict()` di `employee_app/core/predictor.py`.
+7. Lihat endpoint `POST /api/predict` di `employee_app/api.py`.
+8. Lihat `employee_app/ui/static/js/app.js` untuk navigasi presentasi.
 
 Alur training dapat dibaca sebagai pseudocode berikut:
 
@@ -319,9 +333,10 @@ svm_result = svm.predict(vector)
 probability = svm.predict_proba(vector)
 ```
 
-Fungsi helper pada `predictor.py` menghasilkan trace edukatif. Trace tersebut
-tidak melakukan perhitungan baru yang berbeda dari model; nilainya diambil
-langsung dari scaler, encoder, K-Means, dan SVM yang dipakai saat inferensi.
+Trace preprocessing berada di `core/preprocessing.py`. Trace jarak centroid
+berada di `models/kmeans.py`, sedangkan trace probabilitas berada di
+`models/svm.py`. Nilainya diambil langsung dari objek yang dipakai saat
+inferensi, bukan dari perhitungan model lain.
 
 ## Instalasi
 
@@ -355,7 +370,7 @@ Dependency utama:
 | NumPy | Representasi numerik hasil model. |
 | scikit-learn | Preprocessing, K-Means, SVM, kalibrasi, dan metrik. |
 | Joblib | Menyimpan dan membaca cache model. |
-| Flask | Dashboard dan API internal. |
+| Flask | Wizard dan API internal. |
 | pywebview | Window desktop native lintas platform. |
 
 ## Menjalankan Aplikasi
@@ -377,24 +392,23 @@ Eksekusi berikutnya memakai cache sehingga startup lebih cepat.
 
 Menutup window akan menghentikan aplikasi.
 
-## Menggunakan Dashboard
+## Menggunakan Aplikasi
 
 1. Isi umur 18-60 tahun.
 2. Isi total pengalaman 0-40 tahun.
 3. Pilih tingkat pendidikan.
 4. Pilih departemen.
-5. Klik **Proses Data**.
+5. Klik **Mulai Analisis**.
+6. Pelajari hasil standardisasi dan one-hot encoding, lalu klik
+   **Lanjut ke K-Means**.
+7. Bandingkan jarak data ke setiap centroid, lalu klik **Lanjut ke SVM**.
+8. Pelajari confidence setiap kategori SVM, lalu klik **Lihat Ringkasan**.
 
-Dashboard tidak langsung membuka hasil. Panel `Execution Trace` menjalankan
-empat presentasi tahap:
-
-1. memvalidasi input;
-2. menampilkan standardisasi dan one-hot encoding;
-3. membandingkan jarak ke tiga centroid K-Means;
-4. menampilkan probabilitas kategori SVM.
-
-Interpretasi akhir baru dibuka setelah seluruh tahap selesai. Badge
-`Models agree` berarti SVM dan K-Means memberikan kategori sama.
+Antarmuka menggunakan konsep wizard lima tahap: Input Data, Preprocessing,
+K-Means, SVM, dan Ringkasan. Perpindahan tahap dilakukan secara manual agar
+alur pengolahan data dapat dijelaskan saat presentasi. Hasil akhir baru
+ditampilkan pada tahap Ringkasan. Badge `Model Sepakat` berarti SVM dan
+K-Means memberikan kategori yang sama.
 
 ## REST API Internal
 
@@ -403,7 +417,7 @@ deployment publik.
 
 ### `GET /`
 
-Menampilkan dashboard.
+Menampilkan wizard simulasi.
 
 ### `GET /api/health`
 
@@ -412,7 +426,7 @@ Contoh:
 ```json
 {
   "model_loaded": true,
-  "pipeline_version": "1.1.0",
+  "pipeline_version": "2.0.0",
   "status": "ready"
 }
 ```
@@ -451,7 +465,6 @@ Respons ringkas:
   },
   "models_agree": true,
   "process": {
-    "input_validation": {},
     "preprocessing": {},
     "kmeans": {},
     "svm": {}
@@ -459,8 +472,8 @@ Respons ringkas:
 }
 ```
 
-Objek `process` berisi nilai perhitungan yang ditampilkan pada execution
-trace. Respons juga berisi deskripsi, ringkasan input, dan disclaimer.
+Objek `process` berisi nilai perhitungan yang ditampilkan pada setiap tahap
+wizard. Respons juga berisi deskripsi, ringkasan input, dan disclaimer.
 
 ## Validasi Input
 
@@ -546,7 +559,7 @@ Test suite mencakup:
 - penggunaan dan invalidasi cache;
 - validasi seluruh field;
 - kontrak endpoint Flask;
-- rendering dashboard.
+- rendering wizard simulasi;
 - kelengkapan trace preprocessing, K-Means, dan SVM.
 
 ## Kompatibilitas

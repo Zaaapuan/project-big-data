@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Simulasi Clustering Karyawan</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <p class="course-label">TUGAS BIG DATA</p>
+        <h1>Simulasi Clustering Profil Karyawan</h1>
+        <p>Ikuti setiap tahap pengolahan data hingga hasil segmentasi.</p>
+      </div>
+      <div class="model-status" id="model-status" role="status" aria-live="polite">
+        <span class="status-dot"></span>
+        <span id="status-text">Memuat model</span>
+      </div>
+    </header>
+
+    <main class="wizard-card">
+      <nav class="stepper" aria-label="Tahapan analisis">
+        <button class="stepper-item active" type="button" data-step-target="0"
+                aria-current="step">
+          <span>1</span>
+          <strong>Input Data</strong>
+        </button>
+        <button class="stepper-item" type="button" data-step-target="1" disabled>
+          <span>2</span>
+          <strong>Preprocessing</strong>
+        </button>
+        <button class="stepper-item" type="button" data-step-target="2" disabled>
+          <span>3</span>
+          <strong>K-Means</strong>
+        </button>
+        <button class="stepper-item" type="button" data-step-target="3" disabled>
+          <span>4</span>
+          <strong>SVM</strong>
+        </button>
+        <button class="stepper-item" type="button" data-step-target="4" disabled>
+          <span>5</span>
+          <strong>Ringkasan</strong>
+        </button>
+      </nav>
+
+      <div class="wizard-content">
+        <section class="wizard-screen active" data-screen="0"
+                 aria-labelledby="input-title">
+          <div class="screen-heading">
+            <div>
+              <span class="eyebrow">TAHAP 1 DARI 5</span>
+              <h2 id="input-title">Masukkan Data Karyawan</h2>
+              <p>Data ini akan diproses oleh pipeline yang telah dilatih dari 1.470 baris dataset IBM HR.</p>
+            </div>
+            <code>POST /api/predict</code>
+          </div>
+
+          <div class="error-banner" id="error-banner" role="alert" hidden>
+            <strong>Input belum valid.</strong>
+            <span id="error-message"></span>
+          </div>
+
+          <form id="prediction-form" novalidate>
+            <div class="form-grid">
+              <div class="field-group">
+                <label for="age">Umur</label>
+                <div class="input-with-unit">
+                  <input id="age" name="age" type="number" min="18" max="60"
+                         step="1" inputmode="numeric" placeholder="30"
+                         aria-describedby="age-hint age-error" required>
+                  <span>tahun</span>
+                </div>
+                <small id="age-hint">Rentang dataset: 18-60</small>
+                <small class="field-error" id="age-error"></small>
+              </div>
+
+              <div class="field-group">
+                <label for="years-experience">Total pengalaman</label>
+                <div class="input-with-unit">
+                  <input id="years-experience" name="years_experience"
+                         type="number" min="0" max="40" step="1"
+                         inputmode="numeric" placeholder="7"
+                         aria-describedby="experience-hint years-experience-error"
+                         required>
+                  <span>tahun</span>
+                </div>
+                <small id="experience-hint">Tidak melebihi umur dikurangi 14</small>
+                <small class="field-error" id="years-experience-error"></small>
+              </div>
+
+              <div class="field-group">
+                <label for="education-level">Tingkat pendidikan</label>
+                <div class="select-wrap">
+                  <select id="education-level" name="education_level"
+                          aria-describedby="education-level-error" required>
+                    <option value="">Pilih pendidikan</option>
+                    <option value="1">1 - Below College</option>
+                    <option value="2">2 - College</option>
+                    <option value="3">3 - Bachelor</option>
+                    <option value="4">4 - Master</option>
+                    <option value="5">5 - Doctor</option>
+                  </select>
+                </div>
+                <small>Kode 1-5 sesuai dataset IBM HR</small>
+                <small class="field-error" id="education-level-error"></small>
+              </div>
+
+              <div class="field-group">
+                <label for="department">Departemen</label>
+                <div class="select-wrap">
+                  <select id="department" name="department"
+                          aria-describedby="department-error" required>
+                    <option value="">Pilih departemen</option>
+                    <option value="Human Resources">Human Resources</option>
+                    <option value="Research & Development">Research & Development</option>
+                    <option value="Sales">Sales</option>
+                  </select>
+                </div>
+                <small>Akan diubah menggunakan one-hot encoding</small>
+                <small class="field-error" id="department-error"></small>
+              </div>
+            </div>
+
+            <div class="screen-actions align-right">
+              <button class="primary-button" id="predict-button" type="submit">
+                <span class="button-label">MULAI ANALISIS</span>
+                <span class="button-loader" aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section class="wizard-screen" data-screen="1"
+                 aria-labelledby="preprocessing-title" hidden>
+          <div class="screen-heading">
+            <div>
+              <span class="eyebrow">TAHAP 2 DARI 5</span>
+              <h2 id="preprocessing-title">Standardisasi dan Encoding</h2>
+              <p>Fitur numerik disetarakan skalanya, sedangkan departemen diubah menjadi fitur biner.</p>
+            </div>
+            <code>StandardScaler + OneHotEncoder</code>
+          </div>
+          <div class="explanation-grid">
+            <article class="concept-card">
+              <span class="card-index">01</span>
+              <h3>Standardisasi numerik</h3>
+              <p>Setiap nilai dikurangi rata-rata data latih, lalu dibagi simpangan baku.</p>
+              <div class="formula-box">z = (x - mean) / std</div>
+              <div id="scaling-output" class="calculation-list"></div>
+            </article>
+            <article class="concept-card">
+              <span class="card-index">02</span>
+              <h3>Encoding departemen</h3>
+              <p>Satu kategori aktif diberi nilai 1, sedangkan kategori lain diberi nilai 0.</p>
+              <div id="encoding-output" class="encoding-output"></div>
+              <div class="vector-box">
+                <span>Vektor hasil transformasi</span>
+                <code id="transformed-vector"></code>
+              </div>
+            </article>
+          </div>
+          <div class="screen-actions">
+            <button class="secondary-button" type="button" data-go-step="0">KEMBALI</button>
+            <button class="primary-button" type="button" data-go-step="2">LANJUT KE K-MEANS</button>
+          </div>
+        </section>
+
+        <section class="wizard-screen" data-screen="2"
+                 aria-labelledby="kmeans-title" hidden>
+          <div class="screen-heading">
+            <div>
+              <span class="eyebrow">TAHAP 3 DARI 5</span>
+              <h2 id="kmeans-title">Penentuan Cluster dengan K-Means</h2>
+              <p>Vektor baru dibandingkan dengan tiga centroid. Jarak Euclidean terkecil menentukan cluster.</p>
+            </div>
+            <code>KMeans(n_clusters=3)</code>
+          </div>
+          <div class="model-explanation">
+            <div class="formula-panel">
+              <span class="card-index">RUMUS JARAK</span>
+              <div class="large-formula">d(x, c) = √Σ(xᵢ - cᵢ)²</div>
+              <p>Semakin kecil jarak, semakin mirip data karyawan dengan karakteristik centroid tersebut.</p>
+            </div>
+            <div>
+              <h3>Perbandingan jarak centroid</h3>
+              <div id="kmeans-output" class="model-bars"></div>
+              <p class="selection-note" id="kmeans-selection"></p>
+            </div>
+          </div>
+          <div class="screen-actions">
+            <button class="secondary-button" type="button" data-go-step="1">KEMBALI</button>
+            <button class="primary-button" type="button" data-go-step="3">LANJUT KE SVM</button>
+          </div>
+        </section>
+
+        <section class="wizard-screen" data-screen="3"
+                 aria-labelledby="svm-title" hidden>
+          <div class="screen-heading">
+            <div>
+              <span class="eyebrow">TAHAP 4 DARI 5</span>
+              <h2 id="svm-title">Klasifikasi dengan SVM</h2>
+              <p>SVM mempelajari label hasil K-Means dan menghasilkan confidence untuk setiap kategori profil.</p>
+            </div>
+            <code>Calibrated RBF SVM</code>
+          </div>
+          <div class="model-explanation svm-layout">
+            <div class="formula-panel">
+              <span class="card-index">FUNGSI KERNEL</span>
+              <div class="large-formula">K(x, x') = exp(-γ||x-x'||²)</div>
+              <p>Kernel RBF membantu SVM membentuk batas klasifikasi non-linear antar-cluster.</p>
+            </div>
+            <div>
+              <h3>Confidence kategori</h3>
+              <div id="svm-output" class="model-bars"></div>
+              <p class="selection-note" id="svm-selection"></p>
+            </div>
+          </div>
+          <div class="screen-actions">
+            <button class="secondary-button" type="button" data-go-step="2">KEMBALI</button>
+            <button class="primary-button" type="button" data-go-step="4">LIHAT RINGKASAN</button>
+          </div>
+        </section>
+
+        <section class="wizard-screen" data-screen="4" id="result-section"
+                 aria-labelledby="result-title" hidden aria-live="polite">
+          <div class="screen-heading">
+            <div>
+              <span class="eyebrow">TAHAP 5 DARI 5</span>
+              <h2 id="result-title">Ringkasan Hasil Segmentasi</h2>
+              <p>Seluruh tahap pipeline telah selesai dijalankan.</p>
+            </div>
+            <span class="agreement-badge" id="agreement-badge"></span>
+          </div>
+          <div class="result-grid">
+            <section class="result-highlight">
+              <span>KATEGORI PROFIL</span>
+              <h3 id="result-category"></h3>
+              <p id="result-description"></p>
+            </section>
+            <section class="confidence-card">
+              <div>
+                <span>Confidence SVM</span>
+                <strong id="confidence-value"></strong>
+              </div>
+              <div class="confidence-track" role="progressbar"
+                   aria-label="Confidence model" aria-valuemin="0"
+                   aria-valuemax="100" id="confidence-track">
+                <span id="confidence-bar"></span>
+              </div>
+              <small>Keyakinan terhadap segmentasi profil, bukan performa kerja.</small>
+            </section>
+            <section class="result-detail">
+              <h3>Perbandingan model</h3>
+              <dl>
+                <div><dt>K-Means</dt><dd id="kmeans-result"></dd></div>
+                <div><dt>SVM</dt><dd id="svm-result"></dd></div>
+              </dl>
+            </section>
+            <section class="result-detail">
+              <h3>Data karyawan</h3>
+              <div id="input-summary" class="summary-list"></div>
+            </section>
+          </div>
+          <p class="disclaimer" id="result-disclaimer"></p>
+          <div class="screen-actions">
+            <button class="secondary-button" type="button" data-go-step="3">KEMBALI</button>
+            <button class="primary-button" id="restart-button" type="button">ULANGI SIMULASI</button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <span>IBM HR Employee Attrition · 1.470 baris · 4 fitur</span>
+      <span>Pipeline v<strong id="pipeline-version">--</strong></span>
+    </footer>
+  </div>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

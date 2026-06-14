@@ -10,7 +10,7 @@ def run_desktop() -> None:
 
     app = create_app()
     webview.create_window(
-        title="Dashboard Clustering Profil Karyawan",
+        title="Simulasi Clustering Profil Karyawan",
         url=app,
         width=1360,
         height=900,

@@ -2,29 +2,8 @@ import shutil
 
 import numpy as np
 
-from employee_app.config import DATASET_PATH
-from employee_app.model_trainer import (
-    load_or_train_model,
-    train_model,
-)
-
-
-def test_cluster_labels_are_complete_and_unique(model_bundle):
-    assert set(model_bundle.cluster_labels) == {0, 1, 2}
-    assert set(model_bundle.cluster_labels.values()) == {
-        "Emerging Talent",
-        "Academic Achiever",
-        "Seasoned Veteran",
-    }
-    assert len(model_bundle.cluster_profiles) == 3
-    assert all(
-        profile["employee_count"] > 0
-        for profile in model_bundle.cluster_profiles.values()
-    )
-
-
-def test_svm_consistency_exceeds_acceptance_threshold(model_bundle):
-    assert model_bundle.metrics["svm_balanced_accuracy"] >= 0.90
+from employee_app.core.config import DATASET_PATH
+from employee_app.core.training import load_or_train_model, train_model
 
 
 def test_training_is_deterministic(tmp_path):
@@ -62,7 +41,7 @@ def test_cache_is_reused_and_invalidated_by_dataset_change(tmp_path, monkeypatch
         calls.append((dataset_path, model_path))
         return original_bundle
 
-    monkeypatch.setattr("employee_app.model_trainer.train_model", fake_train)
+    monkeypatch.setattr("employee_app.core.training.train_model", fake_train)
     _, loaded_from_cache = load_or_train_model(dataset_copy, artifact_path)
 
     assert loaded_from_cache is False

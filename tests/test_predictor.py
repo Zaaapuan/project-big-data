@@ -1,6 +1,6 @@
 import pytest
 
-from employee_app.predictor import InputValidationError
+from employee_app.core.predictor import InputValidationError
 
 
 VALID_PAYLOAD = {
@@ -26,7 +26,7 @@ def test_prediction_contains_complete_result(predictor):
     assert result["description"]
     assert result["color"] in {"violet", "pink", "ink"}
     assert result["input_summary"]["education_label"] == "Master"
-    assert result["process"]["input_validation"]["status"] == "valid"
+    assert set(result["process"]) == {"preprocessing", "kmeans", "svm"}
     assert len(result["process"]["preprocessing"]["numeric_scaling"]) == 3
     assert len(result["process"]["preprocessing"]["transformed_vector"]) == 6
     assert len(result["process"]["kmeans"]["distances"]) == 3

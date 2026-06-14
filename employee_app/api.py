@@ -1,12 +1,15 @@
-"""Flask routes used by the local desktop dashboard."""
+"""Flask routes used by the local desktop simulation."""
 
 from __future__ import annotations
 
 from flask import Flask, jsonify, render_template, request
 
-from employee_app.config import ROOT_DIR
-from employee_app.model_trainer import load_or_train_model
-from employee_app.predictor import EmployeeProfilePredictor, InputValidationError
+from employee_app.core.config import UI_DIR
+from employee_app.core.predictor import (
+    EmployeeProfilePredictor,
+    InputValidationError,
+)
+from employee_app.core.training import load_or_train_model
 
 
 def create_app(
@@ -14,8 +17,8 @@ def create_app(
 ) -> Flask:
     app = Flask(
         __name__,
-        template_folder=str(ROOT_DIR / "templates"),
-        static_folder=str(ROOT_DIR / "static"),
+        template_folder=str(UI_DIR / "templates"),
+        static_folder=str(UI_DIR / "static"),
     )
 
     if predictor is None:

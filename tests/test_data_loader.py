@@ -1,5 +1,5 @@
-from employee_app.config import DATASET_PATH, DEPARTMENTS, MODEL_FEATURES
-from employee_app.data_loader import dataset_hash, load_dataset
+from employee_app.core.config import DATASET_PATH, DEPARTMENTS, MODEL_FEATURES
+from employee_app.core.data_loader import dataset_hash, load_dataset
 
 
 def test_dataset_has_expected_schema_and_values():
@@ -17,4 +17,3 @@ def test_dataset_hash_is_stable():
     assert dataset_hash(DATASET_PATH) == (
         "a5c31e38bd7fafc9bc333884eb181b06b41b8e5e488e8f7ccb27199fb3be7659"
     )
-

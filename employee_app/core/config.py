@@ -3,12 +3,15 @@
 from pathlib import Path
 
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+ROOT_DIR = Path(__file__).resolve().parents[2]
+PACKAGE_DIR = ROOT_DIR / "employee_app"
+UI_DIR = PACKAGE_DIR / "ui"
 DATASET_PATH = ROOT_DIR / "data" / "employee_attrition.csv"
 ARTIFACT_DIR = ROOT_DIR / "artifacts"
 MODEL_PATH = ARTIFACT_DIR / "employee_profile_model.joblib"
 
-PIPELINE_VERSION = "1.1.0"
+# Incrementing this value invalidates artifacts created by an older pipeline.
+PIPELINE_VERSION = "2.0.0"
 RANDOM_STATE = 42
 N_CLUSTERS = 3
 

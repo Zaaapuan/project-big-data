@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from employee_app.config import DEPARTMENTS, MODEL_FEATURES
+from employee_app.core.config import DEPARTMENTS, MODEL_FEATURES
 
 
 class DatasetError(ValueError):
@@ -15,6 +15,8 @@ class DatasetError(ValueError):
 
 
 def dataset_hash(path: Path) -> str:
+    """Return a SHA-256 hash used to detect dataset changes."""
+
     digest = hashlib.sha256()
     with path.open("rb") as dataset_file:
         for chunk in iter(lambda: dataset_file.read(1024 * 1024), b""):
@@ -23,6 +25,8 @@ def dataset_hash(path: Path) -> str:
 
 
 def load_dataset(path: Path) -> pd.DataFrame:
+    """Read the four model features and validate their expected values."""
+
     if not path.exists():
         raise DatasetError(f"Dataset lokal tidak ditemukan: {path}")
 

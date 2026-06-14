@@ -15,11 +15,12 @@ def test_dashboard_and_health_endpoints(predictor):
     model_info = client.get("/api/model-info")
 
     assert dashboard.status_code == 200
-    assert b"Dashboard Clustering Profil Karyawan" in dashboard.data
-    assert b"Konfigurasi Analisis" in dashboard.data
-    assert b"Proses Model" in dashboard.data
-    assert b'id="result-section" hidden' in dashboard.data
-    assert dashboard.data.count(b'class="pipeline-step"') == 4
+    assert b"Simulasi Clustering Profil Karyawan" in dashboard.data
+    assert b"Konfigurasi Analisis" not in dashboard.data
+    assert b"Pemeriksaan input" not in dashboard.data
+    assert b'id="result-section"' in dashboard.data
+    assert dashboard.data.count(b'class="wizard-screen') == 5
+    assert dashboard.data.count(b'class="stepper-item') == 5
     assert b"/static/css/styles.css" in dashboard.data
     font = client.get("/static/fonts/Rubik-Variable.ttf")
     stylesheet = client.get("/static/css/styles.css")
